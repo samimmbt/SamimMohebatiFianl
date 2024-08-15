@@ -1,3 +1,53 @@
 body {
-    background-color: skyblue;
+    background-color: rgb(233, 238, 239);
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+form:not(form[name=form]),#form{
+    position: relative;
+    top: 25%;
+    background-color: rgb(189, 189, 189);
+    width: 50vw;
+    height: 50vh;
+    border-radius: 30px;
+    padding: 2%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: space-around;
+    align-content: center;
+}
+
+input:not(input[type=checkbox]){
+    border: 2px solid #5a838a;
+    align-self: center;
+    border-radius: 15px;
+    width: 80%;
+    height: 4vh;
+}
+button.btn,#form_save{
+    border: 2px solid transparent;
+    align-self: center;
+    border-radius: 15px;
+    width: 30%;
+    height: 3vh;
+}
+label{
+    align-self: flex-start;
+    margin-left: 10%;
+}
+label.gamebtn{
+    width: 7vh;
+    height: 7vh;
+    border: none;
+    border-radius: 13px;
+    background-color: #749ba1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 5vh;
+    font-family: cursive;
 }
