@@ -1,11 +1,14 @@
 body {
+    margin-top: 6vh;
     background-color: rgb(233, 238, 239);
     display: flex;
     justify-content: center;
     flex-direction: column;
     align-items: center;
 }
-form:not(form[name=form]),#form{
+
+form:not(form[name=form]),
+#form {
     position: relative;
     top: 25%;
     background-color: rgb(189, 189, 189);
@@ -20,25 +23,29 @@ form:not(form[name=form]),#form{
     align-content: center;
 }
 
-input:not(input[type=checkbox]){
+input:not(input[type=checkbox]) {
     border: 2px solid #5a838a;
     align-self: center;
     border-radius: 15px;
     width: 80%;
     height: 4vh;
 }
-button.btn,#form_save{
+
+button.btn,
+#form_save {
     border: 2px solid transparent;
     align-self: center;
     border-radius: 15px;
     width: 30%;
     height: 3vh;
 }
-label{
+
+label {
     align-self: flex-start;
     margin-left: 10%;
 }
-label.gamebtn{
+
+label.gamebtn {
     width: 7vh;
     height: 7vh;
     border: none;
@@ -50,4 +57,81 @@ label.gamebtn{
     text-align: center;
     font-size: 5vh;
     font-family: cursive;
+}
+
+#play {
+    padding: 3vh;
+    background-color: chocolate;
+    color: aliceblue;
+    font-size: 1rem;
+    border: 1px solid transparent;
+    border-radius: 13px;
+}
+
+.alert-danger {
+    font-size: larger;
+    color: tomato;
+    padding: 3vw;
+}
+
+.mb-3 {
+    display: flex;
+    justify-content: space-evenly;
+    padding: 1vw;
+    width: 100vw;
+    height: 5vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: cadetblue;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.mb-3>*:not(.itemContainer) {
+    padding: 1.2vh;
+    background-color: chocolate;
+    color: aliceblue;
+    font-size: 1rem;
+    border: 1px solid transparent;
+    border-radius: 13px;
+    margin: 1%;
+    cursor: pointer;
+}
+
+.item {
+    margin-top: 10%;
+    background-color: chocolate;
+    color: aliceblue;
+    font-size: 1rem;
+    /* width: 10vw; */
+    height: 2vh;
+    display: none;
+    padding: 12px;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 500ms linear;
+
+}
+
+.menu:hover {
+    margin-top: 12% !important;
+}
+
+.menu:hover .item {
+    display: block;
+}
+
+.menu .item:hover {
+    background-color: rgb(149, 80, 30);
+}
+
+.menu .item:active {
+    background-color: rgb(149, 68, 30);
+}
+.menu .item.disable{
+    filter: opacity(0.5);
+    pointer-events: none;
+  cursor: not-allowed;
 }
