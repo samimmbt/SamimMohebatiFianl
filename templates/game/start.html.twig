@@ -2,30 +2,33 @@
 
 {% block body %}
 	<h1>Tic Tac Toe</h1>
-    {% if game is not null %}
-        <p>Game is active!</p>
-	<form action="{{ path('game_start') }}" method="post">
-		<table>
-			{% for row in 0..2 %}
-				<tr>
-					{% for col in 0..2 %}
-						<td>
-							{% set position = (row * 3) + col %}
-							{% if board[position] is defined and board[position] == "X"%}
-								<label class="gamebtn"> {{ board[position]}}</label>
-							{% elseif board[position] == null %}
+	{% if game is not null %}
+		<p>Game is active!</p>
+		<form action="{{ path('game_start') }}" method="post">
+			<table>
+				{% for row in 0..2 %}
+					<tr>
+						{% for col in 0..2 %}
+							<td>
+								{% set position = (row * 3) + col %}
+								{% if board[position] is defined and board[position] == "X"%}
+									<label class="gamebtn">
+										{{ board[position]}}</label>
+								{% elseif board[position] == null %}
 									<input type="submit" id="{{ position }}" name="position" value="{{ position }}" hidden>
 									<label for="{{ position }}" class="gamebtn"></label>
 
-							{% endif %}
-						</td>
-					{% endfor %}
-				</tr>
-			{% endfor %}
-		</table>
-	</form>
-    {% else %}
-        <p> waiting for a player</p>
-    {% endif %}
+								{% endif %}
+							</td>
+						{% endfor %}
+					</tr>
+				{% endfor %}
+			</table>
+		</form>
+	{% else %}
+		{% if app.user.userIdentifier is not null %}
+			<p>{{app.user.userIdentifier}}
+				is waiting for a player to join</p>
+		{% endif %}
+	{% endif %}
 {% endblock %}
-

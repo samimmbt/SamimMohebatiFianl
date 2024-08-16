@@ -1,16 +1,40 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {% block stylesheets %}
-        {% endblock %}
+	<head>
+		<meta charset="UTF-8">
+		<title>
+			{% block title %}Welcome!
+			{% endblock %}
+		</title>
+		{% block stylesheets %}{% endblock %}
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+		{% block javascripts %}
+			{% block importmap %}
+				{{ importmap('app') }}
+			{% endblock %}
+		{% endblock %}
+	</head>
+	<body>
+		{% if error is defined and error%}
+			<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+		{% endif %}
+
+		{% if app.user %}
+			<div class="mb-3">
+				<div id="ranking" title="Global Ranking">
+					Ranking
+				</div>
+				<div id="mode" class="menu menu-icon" title="cooming soon">
+					Mode
+					
+						<div class="item disable" >hard</div>
+					
+						<div class="item disable" >very hard</div>
+				</div>
+				
+				<a href="{{ path('app_logout') }}" title="Logout">Logout</a>
+			</div>
+		{% endif %}
+		{% block body %}{% endblock %}
+	</body>
 </html>
