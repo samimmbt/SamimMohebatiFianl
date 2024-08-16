@@ -48,6 +48,7 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/home, roles: ROLE_USER }
         - { path: ^/game, roles: ROLE_USER }
+        - { path: ^/Tic/Tac/Toe, roles: ROLE_USER }
 
 # Test environment configuration
 when@test:
