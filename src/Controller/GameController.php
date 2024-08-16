@@ -10,10 +10,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class GameController extends AbstractController
 {
-    public static array $board; // Declare the board as a public property
+    public array $board; // Declare the board as a public property
     private $entityManager;
 
     public function __construct(EntityManagerInterface $entityManager)
@@ -26,11 +27,11 @@ class GameController extends AbstractController
     public function index(): Response
     {
 
-        return $this->render('game/index.html.twig', ['game' => null, 'rank' => null]);
+        return $this->render('game/index.html.twig', ['game' => null, 'rank' => null, 'error' => null]);
     }
 
     #[Route('/Tic/Tac/Toe', name: 'game_page')]
-    public function game(Request $request): Response
+    public function game(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
         $game = $request->query->get('game', null);
         $board = $request->query->get('board', null);
@@ -38,21 +39,22 @@ class GameController extends AbstractController
         if ($board) {
             $board = json_decode($board, true);
         }
+        $error = $authenticationUtils->getLastAuthenticationError();
 
-        return $this->render('game/start.html.twig', ['game' => $game, 'board' => $board]);
+        return $this->render('game/start.html.twig', ['game' => $game, 'board' => $board, 'error' => $error]);
     }
 
     #[Route('/start', name: 'game_start', methods: ['POST'])]
-    public function start(Request $request): Response
+    public function start(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
         // Initialize game variable
         $board = $this->board;
         $game = new Game();
         $user = new User();
         $move = new Move();
-        if ($request->isMethod('POST')) {
+        $position = $request->request->get('position');
+        if ($request->isMethod('POST') && $position !== null) {
             // Get the position from the form submission
-            $position = $request->request->get('position');
 
             // Logic to handle the game state update based on the position
             // For example, update the game state in the database or session
@@ -72,8 +74,8 @@ class GameController extends AbstractController
             $this->entityManager->persist($game);
             $this->entityManager->flush();
         }
-
-        return $this->redirectToRoute('game_page', ['game' => $game, 'board' => $board]);
+        $error = $authenticationUtils->getLastAuthenticationError();
+        return $this->redirectToRoute('game_page', ['game' => $game, 'board' => $board, 'error' => $error]);
     }
     public function supports(Request $request): ?bool
     {

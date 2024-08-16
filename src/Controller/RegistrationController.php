@@ -13,6 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class RegistrationController extends AbstractController
 {
@@ -25,12 +26,13 @@ class RegistrationController extends AbstractController
     #[Route('/home', name: 'home')]
     public function home(): Response
     {
-        return $this->render('game/index.html.twig', ['game' => null, 'rank' => null]);
+        return $this->render('game/index.html.twig', ['game' => null, 'rank' => null, 'error' => null]);
     }
 
     #[Route('/signup', name: 'app_register')]
-    public function register(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordEncoder,): Response
+    public function register(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordEncoder, AuthenticationUtils $auth): Response
     {
+        $error = $auth->getLastAuthenticationError();
         $user = new User();
         $form = $this->createFormBuilder($user)
             ->add('username', TextType::class)
@@ -53,6 +55,7 @@ class RegistrationController extends AbstractController
 
         return $this->render('registration/register.html.twig', [
             'form' => $form->createView(),
+            'error' => $error
         ]);
     }
 }
