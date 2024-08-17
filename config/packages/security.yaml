@@ -24,13 +24,13 @@ security:
             provider: users_in_database
             entry_point: form_login
             form_login:
-                login_path: app_login
-                check_path: app_login
+                login_path: login
+                check_path: login
                 enable_csrf: true  # Enable CSRF protection
                 csrf_token_id: authenticate  # Set the CSRF token ID
             logout:
                 path: app_logout
-                target: app_login
+                target: login
             custom_authenticator: App\Security\LoginFormAuthenticator
 
             remember_me:
