@@ -28,8 +28,9 @@ class GameController extends AbstractController
     #[Route('/Tic/Tac/Toe', name: 'game_page')]
     public function game(Request $request, AuthenticationUtils $authenticationUtils, LoggerInterface $logger): Response
     {
-        $game = $request->query->get('gameId', null);
-        
+        $gameId = $request->query->get('gameId', null);
+        $game = $this->entityManager->getRepository(Game::class)->find($gameId);
+        $board = $game->getBoard();
         $users = [];
         $error = $authenticationUtils->getLastAuthenticationError();
 
@@ -52,6 +53,7 @@ class GameController extends AbstractController
     public function start(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
         // Initialize game variable
+       
         $board = $this->board;
         $position = $request->request->get('position');
 
@@ -76,7 +78,8 @@ class GameController extends AbstractController
         if (!$user) {
             throw $this->createNotFoundException('User not found');
         }
-        
+        $requested = $user->getRequests();
+        if($requested){//find if the request in request field is true or accessepted or not
         
         // Create a new Game entity and persist it
         $game = new Game();
@@ -93,6 +96,9 @@ class GameController extends AbstractController
         $this->entityManager->flush();
 
         return $this->redirectToRoute('game_page', ['gameId' => $game->getId()]);
+        }else{
+            //send a signal to Home that the request was sent
+        }
     }
 
     #[Route('/move/{gameId}', name: 'make_move', methods: ['POST'])]
@@ -110,7 +116,6 @@ class GameController extends AbstractController
         if (($game->getCurrentTurn() === 'player1' && $game->getPlayer1Id() === $user) ||
             ($game->getCurrentTurn() === 'player2' && $game->getPlayer2Id() === $user)
         ) {
-
             // Check if the position is valid and not already taken
             if ($game->getBoard()[$position] === null) {
                 $game->getBoard()[$position] = $user->getUserIdentifier(); // Mark the board with the player's username
@@ -118,6 +123,7 @@ class GameController extends AbstractController
                 $move->setGame($game);
                 $move->setPlayer($user);
                 $move->setPosition($position);
+                $move->setCreatedAt(new \DateTime()); // Set the move timestamp
 
                 $this->entityManager->persist($move);
                 $this->entityManager->persist($game);

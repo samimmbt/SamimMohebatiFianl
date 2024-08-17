@@ -208,4 +208,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function addRequest(int $gameId, string $opponent): static
+    {
+        $this->requests[] = [
+            'game_id' => $gameId,
+            'accept' => null, // Initially set to null
+            'opponent' => $opponent,
+        ];
+
+        return $this;
+    }
+
+    public function acceptRequest(int $gameId): static
+    {
+        foreach ($this->requests as &$request) {
+            if ($request['game_id'] === $gameId) {
+                $request['accept'] = true; // Mark as accepted
+                break;
+            }
+        }
+
+        return $this;
+    }
+
+    public function declineRequest(int $gameId): static
+    {
+        foreach ($this->requests as &$request) {
+            if ($request['game_id'] === $gameId) {
+                $request['accept'] = false; // Mark as declined
+                break;
+            }
+        }
+
+        return $this;
+    }
 }
