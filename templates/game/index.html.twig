@@ -1,24 +1,40 @@
 {% extends 'base.html.twig' %}
+{% block header %}
+	<div class="mb-3">
+		<div id="ranking" title="Global Ranking">
+			Ranking
+		</div>
 
+
+		<a href="{{ path('app_logout') }}" title="Logout">Logout</a>
+	</div>
+{% endblock %}
 {% block body %}
 	<h1>Tic Tac Toe</h1>
 
-	<form action="{{ path('game_start') }}" method="post">
-		<table>
-			{%set i = 0 %}
-			{% for row in 0..2 %}
-				<tr>
-					{% for col in 0..2 %}
-						<td>
-								{%set i = i + 1 %}
-								{% if i > 4 and i < 6 %}
-									<button type="submit" id="play" name="play">Play</button>
-								{% endif %}
-						</td>
-					{% endfor %}
-				</tr>
-			{% endfor %}
-		</table>
-	</form>
-{% endblock %}
+	{# <form action="{{ path('game_start') }}" method="post">
+		<button type="submit" id="play" name="play">Play</button>
+	</form> #}
+	{{ form_start(form) }}
+	{{ form_widget(form) }}
+	<button type="submit" id="play">Search</button>
+	{{ form_end(form) }}
+	{% set data = app.request.get('users') %}
+	{% if data is not empty%}
+		<div>
+			<h3>Search Results:</h3>
+			<ul class="menu2">
+				{% for user in data %}
+					<li class="listitem">
+						{{ user.username }}
 
+						<form action="{{ path('start_game', { userId: user.id }) }}" method="post">
+							<button type="submit" id="play" class="small" name="play">Play</button>
+						</form>
+					</li>
+				{% endfor %}
+
+			</ul>
+			</div>
+		{% endif %}
+	{% endblock %}
