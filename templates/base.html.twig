@@ -15,26 +15,11 @@
 		{% endblock %}
 	</head>
 	<body>
-		{% if error is defined and error%}
-			<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-		{% endif %}
-
 		{% if app.user %}
-			<div class="mb-3">
-				<div id="ranking" title="Global Ranking">
-					Ranking
-				</div>
-				<div id="mode" class="menu menu-icon" title="cooming soon">
-					Mode
-					
-						<div class="item disable" >hard</div>
-					
-						<div class="item disable" >very hard</div>
-				</div>
-				
-				<a href="{{ path('app_logout') }}" title="Logout">Logout</a>
-			</div>
+			{% block header %}{% endblock %}
 		{% endif %}
-		{% block body %}{% endblock %}
+		{% block body %}
+			{% block error %}{% endblock %}
+		{% endblock %}
 	</body>
 </html>
