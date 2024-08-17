@@ -1,10 +1,25 @@
 {% extends 'base.html.twig' %}
+{% block header %}
+	<div class="mb-3">
+		<div id="ranking" title="Global Ranking">
+			Ranking
+		</div>
+		<div id="mode" class="menu menu-icon" title="cooming soon">
+			Mode
 
+			<div class="item disable">hard</div>
+
+			<div class="item disable">very hard</div>
+		</div>
+
+		<a href="{{ path('app_logout') }}" title="Logout">Logout</a>
+	</div>
+{% endblock %}
 {% block body %}
 	<h1>Tic Tac Toe</h1>
-	{% if game is not null %}
+	{% if game is not null and game == true%}
 		<p>Game is active!</p>
-		<form action="{{ path('game_start') }}" method="post">
+		<form id="form" action="{{ path('make_move',{ gameId: game.id }) }}" method="post">
 			<table>
 				{% for row in 0..2 %}
 					<tr>
@@ -16,7 +31,7 @@
 										{{ board[position]}}</label>
 								{% elseif board[position] == null %}
 									<input type="submit" id="{{ position }}" name="position" value="{{ position }}" hidden>
-									<label for="{{ position }}" class="gamebtn"></label>
+									<label for="{{ position }}" class="gamebtn {% if currentTurn != 'player1' %}disabled{% endif %}"></label>
 
 								{% endif %}
 							</td>
@@ -30,5 +45,4 @@
 			<p>{{app.user.userIdentifier}}
 				is waiting for a player to join</p>
 		{% endif %}
-	{% endif %}
-{% endblock %}
+	{% endblock %}

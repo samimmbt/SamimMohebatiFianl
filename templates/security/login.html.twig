@@ -4,11 +4,12 @@
 {% endblock %}
 
 {% block body %}
-	<form method="post" action="{{ path('app_login') }}">
-		{% if error %}
-			<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-		{% endif %}
-
+	<form id="form" method="post" action="{{ path('login') }}">
+		{% block error %}
+			{% if error %}
+				<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+			{% endif %}
+		{% endblock %}
 		{% if app.user %}
 			<div class="mb-3">
 				You are logged in as
@@ -19,7 +20,7 @@
 
 		<h1 class="h3 font-weight-normal">Please sign in</h1>
 		<label for="inputUsername">Username</label>
-		<input type="text" value="{{ last_username }}" name="username" id="inputUsername" class="form-control" autocomplete="username" required autofocus>
+		<input type="text" name="username" id="inputUsername" class="form-control" autocomplete="username" required autofocus>
 		<label for="inputPassword">Password</label>
 		<input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
 

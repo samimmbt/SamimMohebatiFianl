@@ -4,13 +4,18 @@
 {% endblock %}
 
 {% block body %}
+	{% block error %}
+		{% if error %}
+			<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security')}}</div>
+		{% endif %}
+	{% endblock %}
 	{{ form_start(form) }}
 	<h1>Register</h1>
 	{{ form_widget(form) }}
 	{{ form_end(form) }}
 
 	<div>Already have an account?
-		<a href="{{path('app_login')}}">
+		<a href="{{path('login')}}">
 			Sign in →</a>
 	</div>
 {% endblock %}
