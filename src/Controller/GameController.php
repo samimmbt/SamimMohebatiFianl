@@ -5,7 +5,9 @@ namespace App\Controller;
 use App\Entity\Game;
 use App\Entity\Move;
 use App\Entity\User;
+use App\Form\UserSearchType;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,25 +25,27 @@ class GameController extends AbstractController
         $this->board = array_fill(0, 9, null); // Initialize the board
     }
 
-    #[Route('/index', name: 'app_game')]
-    public function index(): Response
-    {
-
-        return $this->render('game/index.html.twig', ['game' => null, 'rank' => null, 'error' => null]);
-    }
-
     #[Route('/Tic/Tac/Toe', name: 'game_page')]
-    public function game(Request $request, AuthenticationUtils $authenticationUtils): Response
+    public function game(Request $request, AuthenticationUtils $authenticationUtils, LoggerInterface $logger): Response
     {
-        $game = $request->query->get('game', null);
-        $board = $request->query->get('board', null);
-
-        if ($board) {
-            $board = json_decode($board, true);
-        }
+        $game = $request->query->get('gameId', null);
+        
+        $users = [];
         $error = $authenticationUtils->getLastAuthenticationError();
 
-        return $this->render('game/start.html.twig', ['game' => $game, 'board' => $board, 'error' => $error]);
+        $logger->info("Game info:", [
+            'game' => $game,
+            'board' => $board,
+            'error' => $error,
+            'users' => $users,
+        ]);
+
+        return $this->redirectToRoute('game_page', [
+            'game' => $game,
+            'board' => $board,
+            'error' => $error,
+            'users' => $users,
+        ]);
     }
 
     #[Route('/start', name: 'game_start', methods: ['POST'])]
@@ -49,38 +53,82 @@ class GameController extends AbstractController
     {
         // Initialize game variable
         $board = $this->board;
-        $game = new Game();
-        $user = new User();
-        $move = new Move();
         $position = $request->request->get('position');
-        if ($request->isMethod('POST') && $position !== null) {
-            // Get the position from the form submission
 
-            // Logic to handle the game state update based on the position
-            // For example, update the game state in the database or session
-            // Update the board with the player's move (you may want to add player logic here)
+        if ($request->isMethod('POST') && $position !== null) {
             if ($position !== null) {
                 $board[$position] = 'X'; // Example: Mark the position with 'X'
+
             }
             if ($board) {
                 $board = json_encode($board, true);
             }
-            $game->setPlayer1Id($user->getId()); // Set player names as needed
-            $game->setCreatedAt(new \DateTime());
-            $move->setPosition($position);
-            $move->setGame($game);
-            $game->addMove($move);
-
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
         }
         $error = $authenticationUtils->getLastAuthenticationError();
-        return $this->redirectToRoute('game_page', ['game' => $game, 'board' => $board, 'error' => $error]);
+        return $this->redirectToRoute('game_page', ['game' => false, 'board' => $board, 'error' => $error]);
     }
-    public function supports(Request $request): ?bool
+
+    #[Route('/game/{userId}', name: 'start_game')]
+    public function startGame(int $userId): Response
     {
-        dump($request->attributes->get('_route')); // Log the route
-        dump($request->getMethod()); // Log the request method
-        return $request->attributes->get('_route') === 'app_login' && $request->isMethod('POST');
+        // Logic to start the game with the selected user
+        $user = $this->entityManager->getRepository(User::class)->find($userId);
+        if (!$user) {
+            throw $this->createNotFoundException('User not found');
+        }
+        
+        
+        // Create a new Game entity and persist it
+        $game = new Game();
+        $game->setPlayer1Id($this->getUser());
+        $game->setPlayer2Id($user);
+        $game->setBoard(array_fill(0, 9, null));
+        $game->setStatus('in_progress');
+        $game->setCreatedAt(new \DateTime());
+        // Randomly assign the starting player
+        $currentTurn = rand(0, 1) ? 'player1' : 'player2';
+        $game->setCurrentTurn($currentTurn);
+
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
+
+        return $this->redirectToRoute('game_page', ['gameId' => $game->getId()]);
     }
+
+    #[Route('/move/{gameId}', name: 'make_move', methods: ['POST'])]
+    public function makeMove(Request $request, $gameId): Response
+    {
+        $game = $this->entityManager->getRepository(Game::class)->find($gameId);
+        if (!$game || $game->getStatus() !== 'in_progress') {
+            throw $this->createNotFoundException('Game not found or not in progress');
+        }
+
+        $position = $request->request->get('position');
+        $user = $this->getUser(); // Assuming the user is authenticated
+
+        // Check if it is the current player's turn
+        if (($game->getCurrentTurn() === 'player1' && $game->getPlayer1Id() === $user) ||
+            ($game->getCurrentTurn() === 'player2' && $game->getPlayer2Id() === $user)
+        ) {
+
+            // Check if the position is valid and not already taken
+            if ($game->getBoard()[$position] === null) {
+                $game->getBoard()[$position] = $user->getUserIdentifier(); // Mark the board with the player's username
+                $move = new Move();
+                $move->setGame($game);
+                $move->setPlayer($user);
+                $move->setPosition($position);
+
+                $this->entityManager->persist($move);
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+
+                // Switch turns
+                $game->setCurrentTurn($game->getCurrentTurn() === 'player1' ? 'player2' : 'player1');
+            }
+        }
+
+        return $this->redirectToRoute('game_page', ['gameId' => $gameId]);
+    }
+
 }
