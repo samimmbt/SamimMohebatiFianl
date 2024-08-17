@@ -37,6 +37,12 @@ class Game
     #[ORM\OneToMany(targetEntity: Move::class, mappedBy: 'game')]//for recreating whole game
     private Collection $moves;
 
+    #[ORM\Column(type: Types::ARRAY)]
+    private array $board = [];
+
+    #[ORM\Column(length: 100)]
+    private ?string $currentTurn = null;
+
     public function __construct()
     {
         $this->moves = new ArrayCollection();
@@ -133,6 +139,30 @@ class Game
                 $move->setGame(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getBoard(): array
+    {
+        return $this->board;
+    }
+
+    public function setBoard(array $board): static
+    {
+        $this->board = $board;
+
+        return $this;
+    }
+
+    public function getCurrentTurn(): ?string
+    {
+        return $this->currentTurn;
+    }
+
+    public function setCurrentTurn(string $currentTurn): static
+    {
+        $this->currentTurn = $currentTurn;
 
         return $this;
     }
