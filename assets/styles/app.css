@@ -1,30 +1,32 @@
 body {
-    margin-top: 6vh;
+    /* margin-top: -11vh; */
     background-color: rgb(233, 238, 239);
+    background-image: -webkit-linear-gradient(-45deg,#6482AD 0%, #E2DAD6 100%);
+    background-repeat: no-repeat;
     display: flex;
     justify-content: center;
     flex-direction: column;
+    height: 97.8vh;
     align-items: center;
 }
 
-form:not(form[name=form]),
 #form {
     position: relative;
-    top: 25%;
-    background-color: rgb(189, 189, 189);
-    width: 50vw;
-    height: 50vh;
+    /* top: 25%; */
+    background-color: #F5EDED;
+    width: 25vw;
+    height: 25vh;
     border-radius: 30px;
     padding: 2%;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     flex-direction: column;
     justify-content: space-around;
     align-content: center;
 }
 
 input:not(input[type=checkbox]) {
-    border: 2px solid #5a838a;
+    border: 2px solid #5B99C2;
     align-self: center;
     border-radius: 15px;
     width: 80%;
@@ -50,7 +52,7 @@ label.gamebtn {
     height: 7vh;
     border: none;
     border-radius: 13px;
-    background-color: #749ba1;
+    background-color: #5B99C2;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -61,11 +63,20 @@ label.gamebtn {
 
 #play {
     padding: 3vh;
-    background-color: chocolate;
-    color: aliceblue;
+    background-color: #F1DEC6;
+    color: rgb(69, 111, 148);
     font-size: 1rem;
     border: 1px solid transparent;
     border-radius: 13px;
+    transition: all 500ms ease-in-out;
+}
+
+#play.small {
+    padding: 1.2vh;
+}
+
+#play.small:hover {
+    background-color: #f4efe8;
 }
 
 .alert-danger {
@@ -83,7 +94,8 @@ label.gamebtn {
     position: fixed;
     top: 0;
     left: 0;
-    background-color: cadetblue;
+    background-color: #1A4870;
+    /* Navy */
     align-items: center;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -91,8 +103,10 @@ label.gamebtn {
 
 .mb-3>*:not(.itemContainer) {
     padding: 1.2vh;
-    background-color: chocolate;
-    color: aliceblue;
+    background-color: #7FA1C3;
+    /* Orange */
+    color: white;
+    /* Text color */
     font-size: 1rem;
     border: 1px solid transparent;
     border-radius: 13px;
@@ -130,8 +144,28 @@ label.gamebtn {
 .menu .item:active {
     background-color: rgb(149, 68, 30);
 }
-.menu .item.disable{
+
+.listitem {
+    margin-top: 1%;
+    background-color: #7FA1C3;
+    color: aliceblue;
+    font-size: 1rem;
+    width: 20vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px;
+    text-decoration: none;
+    border-radius: 8px;
+}
+
+/* .menu2 {
+    height: 70px;
+    overflow-y: scroll;
+} */
+
+.disable {
     filter: opacity(0.5);
     pointer-events: none;
-  cursor: not-allowed;
+    cursor: not-allowed;
 }
