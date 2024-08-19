@@ -60,7 +60,7 @@ class RequestController extends AbstractController
 
     // src/Controller/GameController.php
 
-#[Route('/request/acceptedRequests', name: 'get_accepted_requests', methods: ['POST'])]
+#[Route('/request/acceptedRequests', name: 'get_accepted_requests', methods: ['POST'])]//for geting list of accepted requests
 public function getAcceptedRequests(Request $request): JsonResponse
 {
     $user = $this->getUser();
@@ -81,6 +81,8 @@ public function getAcceptedRequests(Request $request): JsonResponse
                 'opponent' => $otherUser->getUserIdentifier(),
                 'requests' => $requests,
             ];
+            $this->eventDispatcher->dispatch(new GameRequestEvent($user, $otherUser->getUserIdentifier(), 'accept'));
+
         }
     }
 
@@ -96,6 +98,8 @@ public function getAcceptedRequests(Request $request): JsonResponse
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
+        $this->eventDispatcher->dispatch(new GameRequestEvent($user, $opponent, 'accept'));
+
         return $this->json(['success' => 'Request accepted']);
     }
 
@@ -107,6 +111,8 @@ public function getAcceptedRequests(Request $request): JsonResponse
         // $user->removeRequest($opponent);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+
+        $this->eventDispatcher->dispatch(new GameRequestEvent($user, $opponent, 'reject'));
 
         return $this->json(['success' => 'Request accepted']);
     }
