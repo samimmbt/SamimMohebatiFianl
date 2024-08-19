@@ -6,9 +6,7 @@
 		</div>
 		<div id="mode" class="menu menu-icon" title="cooming soon">
 			Mode
-
 			<div class="item disable">hard</div>
-
 			<div class="item disable">very hard</div>
 		</div>
 
@@ -16,33 +14,34 @@
 	</div>
 {% endblock %}
 {% block body %}
-	<h1>Tic Tac Toe</h1>
-	{% if game is not null and game == true%}
-		<p>Game is active!</p>
-		<form id="form" action="{{ path('make_move',{ gameId: game.id }) }}" method="post">
-			<table>
-				{% for row in 0..2 %}
-					<tr>
-						{% for col in 0..2 %}
-							<td>
-								{% set position = (row * 3) + col %}
-								{% if board[position] is defined and board[position] == "X"%}
-									<label class="gamebtn">
-										{{ board[position]}}</label>
-								{% elseif board[position] == null %}
-									<input type="submit" id="{{ position }}" name="position" value="{{ position }}" hidden>
-									<label for="{{ position }}" class="gamebtn {% if currentTurn != 'player1' %}disabled{% endif %}"></label>
 
-								{% endif %}
-							</td>
-						{% endfor %}
-					</tr>
-				{% endfor %}
-			</table>
-		</form>
-	{% else %}
-		{% if app.user.userIdentifier is not null %}
-			<p>{{app.user.userIdentifier}}
-				is waiting for a player to join</p>
-		{% endif %}
-	{% endblock %}
+		<h1>Tic Tac Toe</h1>
+		{% if game is not null and game == true%}
+			<p>Game is active!</p>
+			<form id="form" action="{{ path('make_move',{ gameId: game.id }) }}" method="post">
+				<table>
+					{% for row in 0..2 %}
+						<tr>
+							{% for col in 0..2 %}
+								<td>
+									{% set position = (row * 3) + col %}
+									{% if board[position] is defined and board[position] == "X"%}
+										<label class="gamebtn">
+											{{ board[position]}}</label>
+									{% elseif board[position] == null %}
+										<input type="submit" id="{{ position }}" name="position" value="{{ position }}" hidden>
+										<label for="{{ position }}" class="gamebtn {% if currentTurn != 'player1' %}disabled{% endif %}"></label>
+	
+									{% endif %}
+								</td>
+							{% endfor %}
+						</tr>
+					{% endfor %}
+				</table>
+			</form>
+		{% else %}
+			{% if app.user.userIdentifier is not null %}
+				<p>{{app.user.userIdentifier}}
+					is waiting for a player to join</p>
+			{% endif %}
+		{% endblock %}
