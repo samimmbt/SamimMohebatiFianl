@@ -5,25 +5,61 @@ namespace App\Controller;
 use App\Entity\Game;
 use App\Entity\Move;
 use App\Entity\User;
+use App\Event\GameRequestEvent;
 use App\Form\UserSearchType;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class GameController extends AbstractController
 {
     public array $board; // Declare the board as a public property
     private $entityManager;
+    private EventDispatcherInterface $eventDispatcher;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, EventDispatcherInterface $eventDispatcher)
     {
         $this->entityManager = $entityManager;
         $this->board = array_fill(0, 9, null); // Initialize the board
+        $this->eventDispatcher = $eventDispatcher;
+
     }
+
+    #[Route('/home', name: 'home')]
+    public function home(Request $request, LoggerInterface $logger): Response
+    {
+        $form = $this->createForm(UserSearchType::class, null, ['attr' => ['id' => 'form']]);
+        $form->handleRequest($request);
+        $users = [];
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $users = $this->entityManager->getRepository(User::class)->searchUsers($data['username']);
+            $logger->info("Form submitted:", [ // Log the search results
+                'form' => $data,
+                'users' => $users, // Log all users found
+            ]);
+            $userArray = [];
+            foreach ($users as $user) {
+                $userArray[] = [
+                    'id' => $user->getId(),          // Get user ID
+                    'username' => $user->getUsername() // Get username
+                ];
+                $logger->info('User found: ' . $user->getUsername() . "data:" . $data['username'], ['Data' => $userArray]);
+            }
+
+            return $this->redirectToRoute('home', ['users' => $userArray]);
+            // return new JsonResponse(['users'=>$users]);
+        }
+
+        return $this->render('game/index.html.twig', ['game' => null, 'rank' => null, 'error' => null, 'users' => $users, 'form' => $form->createView()]);
+    }
+
 
     #[Route('/Tic/Tac/Toe', name: 'game_page')]
     public function game(Request $request, AuthenticationUtils $authenticationUtils, LoggerInterface $logger): Response
@@ -40,8 +76,15 @@ class GameController extends AbstractController
             'error' => $error,
             'users' => $users,
         ]);
-
-        return $this->redirectToRoute('game_page', [
+        if (!$gameId) {
+            return $this->redirectToRoute('game_page', [
+                'game' => $game,
+                'board' => $board,
+                'error' => $error,
+                'users' => $users,
+            ]);
+        }
+        return $this->render("game/start.html.twig", [
             'game' => $game,
             'board' => $board,
             'error' => $error,
@@ -49,11 +92,11 @@ class GameController extends AbstractController
         ]);
     }
 
-    #[Route('/start', name: 'game_start', methods: ['POST'])]
-    public function start(Request $request, AuthenticationUtils $authenticationUtils): Response
+    #[Route('/start/{game}', name: 'start_a_game', methods: ['POST'])]
+    public function startAGame(Request $request, AuthenticationUtils $authenticationUtils, $game): Response
     {
         // Initialize game variable
-       
+
         $board = $this->board;
         $position = $request->request->get('position');
 
@@ -70,35 +113,68 @@ class GameController extends AbstractController
         return $this->redirectToRoute('game_page', ['game' => false, 'board' => $board, 'error' => $error]);
     }
 
-    #[Route('/game/{userId}', name: 'start_game')]
-    public function startGame(int $userId): Response
+    #[Route('/start', name: 'game_start', methods: ['POST'])]
+    public function start(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
-        // Logic to start the game with the selected user
-        $user = $this->entityManager->getRepository(User::class)->find($userId);
+        // Initialize game variable
+
+        $board = $this->board;
+        $position = $request->request->get('position');
+
+        if ($request->isMethod('POST') && $position !== null) {
+            if ($position !== null) {
+                $board[$position] = 'X'; // Example: Mark the position with 'X'
+
+            }
+            if ($board) {
+                $board = json_encode($board, true);
+            }
+        }
+        $error = $authenticationUtils->getLastAuthenticationError();
+        return $this->redirectToRoute('game_page', ['game' => false, 'board' => $board, 'error' => $error]);
+    }
+
+    #[Route('/game/{userName}', name: 'start_game')]
+    public function startGame(string $userName, LoggerInterface $logger): Response //username is opponent id 
+    {
+        $user = $this->entityManager->getRepository(User::class)->findOneBySomeField(['username' => $userName]);
         if (!$user) {
-            throw $this->createNotFoundException('User not found');
+            throw $this->createNotFoundException('User not found !!!');
         }
-        $requested = $user->getRequests();
-        if($requested){//find if the request in request field is true or accessepted or not
-        
-        // Create a new Game entity and persist it
-        $game = new Game();
-        $game->setPlayer1Id($this->getUser());
-        $game->setPlayer2Id($user);
-        $game->setBoard(array_fill(0, 9, null));
-        $game->setStatus('in_progress');
-        $game->setCreatedAt(new \DateTime());
-        // Randomly assign the starting player
-        $currentTurn = rand(0, 1) ? 'player1' : 'player2';
-        $game->setCurrentTurn($currentTurn);
 
-        $this->entityManager->persist($game);
-        $this->entityManager->flush();
+        // Check if the user has an active request to play
+        $requests = $user->getRequests(); //getting the user requests from database
+        $canPlay = false;
+        $logger->info("requests: ",['requests'=>$requests]);
 
-        return $this->redirectToRoute('game_page', ['gameId' => $game->getId()]);
-        }else{
-            //send a signal to Home that the request was sent
+        if ($requests != null) {
+            foreach ($requests as $request) {
+                if ($request['accept'] === true && $request['opponent'] === $this->getUser()->getUserIdentifier()) {
+                    $canPlay = true;
+                    break;
+                }
+            }
         }
+        $logger->info("can play?" . ($canPlay ? "yes" : "no"));
+        if ($canPlay) {
+            // Create a new Game entity and persist it
+            $game = new Game();
+            $game->setPlayer1Id($this->getUser());
+            $game->setPlayer2Id($user);
+            $game->setBoard(array_fill(0, 9, null));
+            $game->setStatus('in_progress');
+            $game->setCreatedAt(new \DateTime());
+
+            // Randomly assign the starting player
+            $currentTurn = rand(0, 1) ? 'player1' : 'player2';
+            $game->setCurrentTurn($currentTurn);
+
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            $logger->info("it can play");
+            return $this->redirectToRoute('game_page', ['gameId' => $game->getId()]);
+        } 
+        return $this->redirectToRoute('game_page');
     }
 
     #[Route('/move/{gameId}', name: 'make_move', methods: ['POST'])]
