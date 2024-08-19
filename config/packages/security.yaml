@@ -19,7 +19,6 @@ security:
             security: false
 
         main:
-            
             lazy: true
             provider: users_in_database
             entry_point: form_login
