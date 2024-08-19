@@ -1,7 +1,7 @@
 body {
     /* margin-top: -11vh; */
     background-color: rgb(233, 238, 239);
-    background-image: -webkit-linear-gradient(-45deg,#6482AD 0%, #E2DAD6 100%);
+    background-image: -webkit-linear-gradient(126deg, #6482ad 14%, #e2dad6e8 80%), -webkit-linear-gradient(180deg, #6482ad 28%, #e2dad6a8 29%), -webkit-linear-gradient(104deg, #6482AD 50%, #E2DAD6 15%);
     background-repeat: no-repeat;
     display: flex;
     justify-content: center;
@@ -130,7 +130,7 @@ label.gamebtn {
 }
 
 .menu:hover {
-    margin-top: 12% !important;
+    margin-top: 7.5vh !important;
 }
 
 .menu:hover .item {
