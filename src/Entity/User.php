@@ -209,38 +209,59 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function addRequest(int $gameId, string $opponent): static
+    public function addRequest(string $sender, string $reciver): static
     {
         $this->requests[] = [
-            'game_id' => $gameId,
             'accept' => null, // Initially set to null
-            'opponent' => $opponent,
+            'opponent' => $sender,
+            'reciver' => $reciver
         ];
-
         return $this;
     }
 
-    public function acceptRequest(int $gameId): static
+    public function acceptRequest(string $opponent): static
     {
         foreach ($this->requests as &$request) {
-            if ($request['game_id'] === $gameId) {
+            if ($request['opponent'] === $opponent) {
                 $request['accept'] = true; // Mark as accepted
                 break;
             }
         }
-
         return $this;
     }
 
-    public function declineRequest(int $gameId): static
+    public function declineRequest(string $opponent): static
     {
         foreach ($this->requests as &$request) {
-            if ($request['game_id'] === $gameId) {
+            if ($request['opponent'] === $opponent) {
                 $request['accept'] = false; // Mark as declined
                 break;
             }
         }
-
         return $this;
+    }
+
+
+    public function removeRequest(string $opponent): static
+    {
+        foreach ($this->requests as $key => $request) {
+            if ($request['opponent'] === $opponent) {
+                unset($this->requests[$key]); // Remove the request from the array
+                $this->requests = array_values($this->requests); // Reindex the array
+                break;
+            }
+        }
+        return $this;
+    }
+
+    public function getAcceptedRequests(string $opponent): array
+    {
+        if ($this->requests !== null) {
+            return array_filter($this->requests, function ($request) use ($opponent) {
+                return $request['opponent'] === $opponent && $request['accept'] === true;
+            });
+        }else{
+            return [];
+        }
     }
 }
