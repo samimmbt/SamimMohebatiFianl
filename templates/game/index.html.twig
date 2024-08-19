@@ -14,62 +14,82 @@
 {% block script %}
 <script>
 
+let isFetching = false; // Flag to control fetching
+
 document.addEventListener('DOMContentLoaded', () => {
-    setInterval(fetchGameRequests, 5000);
-    // setInterval(fetchGameState, 2000);
+    fetchGameRequests(); // Initial fetch when the page loads
 });
 
+// Function to fetch game requests
 function fetchGameRequests() {
+    if (isFetching) return; // Prevent multiple fetches at the same time
+    isFetching = true; // Set the flag to true
+
     fetch(`/request`)
         .then(response => response.json())
-        .then(data => updateRequestPanel(data))
-        .then(()=> getAcceptedRequests())
-        .catch(error => console.error('Error fetching requests:', error));
-}
-
-function updateAcceptedRequestsUI(data) {
-    const headerElement = document.getElementById("header");
-    const gamesElement = document.getElementById("games");
-    const headerItem = '<div id="games" class="menu" title="Game list">Games</div>';
-
-    if (data.length > 0) {
-        if (!gamesElement) {
-            headerElement.insertAdjacentHTML('beforeend', headerItem); // Append header only once
-        }
-
-        data.forEach(gameRequest => {
-            addGameElement(gameRequest.opponent); // Add game element for each accepted request
+        .then(data => {
+            updateRequestPanel(data);
+            getAcceptedRequests(); // Fetch accepted requests after updating the request panel
+        })
+        .catch(error => console.error('Error fetching requests:', error))
+        .finally(() => {
+            isFetching = false; // Reset the flag after fetching
         });
-    }
 }
 
-function updateRequestPanel(data) {
-    const requestsElement = document.getElementById("requests");
-    let requestCount = 0;
-
-    requestsElement.innerHTML = "";
-    if(data){
-    data.forEach(request => {
-        const { opponent, accept } = request;
-        const acceptRejectFunction = accept ? 'reject' : 'accept';
-
-        requestsElement.innerHTML += `
-            <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
-                <div class="item">${opponent}</div>
-                <div class="item" onclick="${acceptRejectFunction}('${opponent}')">${accept ? '❌' : '✅'}</div>
-            </li>`;
-
-        requestCount++;
-
-        if (accept) {
-            gamelist(false, request);
-        }
-    });
-}
-    requestsElement.innerHTML += `Requests: ${requestCount}`;
+// Function to fetch accepted requests
+function getAcceptedRequests() {
+    fetch(`/request/acceptedRequests`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateAcceptedRequestsUI(data); // Update the UI with the received data
+        })
+        .catch(error => console.error('Error fetching accepted requests:', error));
 }
 
+// Function to accept a request
+function accept(opponent) {
+    fetch(`/request/accept/${opponent}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fetchGameRequests(); // Fetch updated requests after accepting
+            }
+        })
+        .catch(error => console.error('Error accepting request:', error));
+}
 
+// Function to reject a request
+function reject(opponent) {
+    fetch(`/request/reject/${opponent}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fetchGameRequests(); // Fetch updated requests after rejecting
+            }
+        })
+        .catch(error => console.error('Error rejecting request:', error));
+}
 
 function gamelist(request, list) {//does two work first its a request it sends a request else it will add item to header named Games
     const { opponent, accept } = list;
@@ -102,69 +122,73 @@ function gamelist(request, list) {//does two work first its a request it sends a
     }
 }
 
-function addGameElement(opponent) {
-    console.log("addGameElement:"+ opponent);
-    
+// Function to update the request panel
+function updateRequestPanel(data) {
+    const requestsElement = document.getElementById("requests");
+    let requestCount = 0;
+
+    requestsElement.innerHTML = "";
+    if (data) {
+        data.forEach(request => {
+            const { opponent, accept } = request;
+            const acceptRejectFunction = accept ? 'reject' : 'accept';
+
+            requestsElement.innerHTML += `
+            <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
+                <div class="item">${opponent}</div>
+                <div class="item" onclick="${acceptRejectFunction}('${opponent}')">${accept ? '❌' : '✅'}</div>
+            </li>`;
+
+            requestCount++;
+
+            if (accept) {
+                gamelist(false, request);
+            }
+        });
+    }
+    requestsElement.innerHTML += `Requests: ${requestCount}`;
+}
+
+// Function to update the accepted requests UI
+function updateAcceptedRequestsUI(data) {
     const gamesElement = document.getElementById("games");
-    if (![...gamesElement.children].some(item => item.textContent.includes(opponent))) {// if the game element already exists to avoid duplicates
-        gamesElement.innerHTML += `
-    <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
-        <div class="item">${opponent}</div>
-        <div class="item" onclick="gamelist('${opponent}', false)">Play 🎮</div>
-    </li>`;
+    gamesElement.innerHTML = ""; // Clear previous games
+
+    if (data.length > 0) {
+        data.forEach(gameRequest => {
+            addGameElement(gameRequest.opponent); // Add game element for each accepted request
+        });
     }
 }
 
-function getAcceptedRequests() {
-    fetch(`/request/acceptedRequests`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.error) {
-            console.error(data.error);
-            return;
-        }
-        // Update the UI with the received data
-        console.log(data);
-        updateAcceptedRequestsUI(data);
-    })
-    .catch(error => console.error('Error fetching accepted requests:', error));
-}
-
-function accept(opponent) {
-    sendRequestAction(`/request/accept/${opponent}`);
-    fetchGameRequests(); 
-}
-
-// Function to reject a request
-function reject(opponent) {
-    sendRequestAction(`/request/reject/${opponent}`);
-    fetchGameRequests(); 
-}
-
-function sendRequestAction(url) {
-    fetch(url, {
+function sendPlayingRequest(opponent) {
+    fetch(`/request/send/${opponent}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
     })
         .then(response => response.json())
-        .then(() => fetchGameRequests())
-        .catch(error => console.error('Error updating request:', error));
+        .then(data => {
+            if (data.success) {
+                fetchGameRequests(); // Fetch updated requests after rejecting
+            }
+        })
+        .catch(error => console.error('Error rejecting request:', error));
 }
-function sendPlayingRequest(opponent){
 
+// Function to add game elements
+function addGameElement(opponent) {
+    const gamesElement = document.getElementById("games");
+    if (![...gamesElement.children].some(item => item.textContent.includes(opponent))) {
+        gamesElement.innerHTML += `
+            <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
+                <div class="item">${opponent}</div>
+                <div class="item" onclick="gamelist('${opponent}', false)">Play 🎮</div>
+            </li>`;
+    }
 }
+
     </script>
 	{% endblock script %}
 	{% block body %}
