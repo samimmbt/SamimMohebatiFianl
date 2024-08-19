@@ -1,40 +1,196 @@
 {% extends 'base.html.twig' %}
 {% block header %}
-	<div class="mb-3">
+	<div class="mb-3" id="header">
 		<div id="ranking" title="Global Ranking">
 			Ranking
 		</div>
-
+		<div id="requests" class="menu menu-icon" title="requests">
+			Requests
+		</div>
 
 		<a href="{{ path('app_logout') }}" title="Logout">Logout</a>
 	</div>
 {% endblock %}
-{% block body %}
-	<h1>Tic Tac Toe</h1>
+{% block script %}
+<script>
 
-	{# <form action="{{ path('game_start') }}" method="post">
-		<button type="submit" id="play" name="play">Play</button>
-	</form> #}
-	{{ form_start(form) }}
-	{{ form_widget(form) }}
-	<button type="submit" id="play">Search</button>
-	{{ form_end(form) }}
-	{% set data = app.request.get('users') %}
-	{% if data is not empty%}
-		<div>
-			<h3>Search Results:</h3>
-			<ul class="menu2">
-				{% for user in data %}
-					<li class="listitem">
-						{{ user.username }}
+document.addEventListener('DOMContentLoaded', () => {
+    setInterval(fetchGameRequests, 5000);
+    // setInterval(fetchGameState, 2000);
+});
 
-						<form action="{{ path('start_game', { userId: user.id }) }}" method="post">
-							<button type="submit" id="play" class="small" name="play">Play</button>
-						</form>
-					</li>
-				{% endfor %}
+function fetchGameRequests() {
+    fetch(`/request`)
+        .then(response => response.json())
+        .then(data => updateRequestPanel(data))
+        .then(()=> getAcceptedRequests())
+        .catch(error => console.error('Error fetching requests:', error));
+}
 
-			</ul>
-			</div>
-		{% endif %}
-	{% endblock %}
+function updateAcceptedRequestsUI(data) {
+    const headerElement = document.getElementById("header");
+    const gamesElement = document.getElementById("games");
+    const headerItem = '<div id="games" class="menu" title="Game list">Games</div>';
+
+    if (data.length > 0) {
+        if (!gamesElement) {
+            headerElement.insertAdjacentHTML('beforeend', headerItem); // Append header only once
+        }
+
+        data.forEach(gameRequest => {
+            addGameElement(gameRequest.opponent); // Add game element for each accepted request
+        });
+    }
+}
+
+function updateRequestPanel(data) {
+    const requestsElement = document.getElementById("requests");
+    let requestCount = 0;
+
+    requestsElement.innerHTML = "";
+    if(data){
+    data.forEach(request => {
+        const { opponent, accept } = request;
+        const acceptRejectFunction = accept ? 'reject' : 'accept';
+
+        requestsElement.innerHTML += `
+            <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
+                <div class="item">${opponent}</div>
+                <div class="item" onclick="${acceptRejectFunction}('${opponent}')">${accept ? '❌' : '✅'}</div>
+            </li>`;
+
+        requestCount++;
+
+        if (accept) {
+            gamelist(false, request);
+        }
+    });
+}
+    requestsElement.innerHTML += `Requests: ${requestCount}`;
+}
+
+
+
+function gamelist(request, list) {//does two work first its a request it sends a request else it will add item to header named Games
+    const { opponent, accept } = list;
+    const headerElement = document.getElementById("header");
+    const gamesElement = document.getElementById("games");
+    const headerItem = '<div id="games" class="menu" title="Game list">Games</div>';
+    console.log(`request:${request},list:${list}`);
+    // Fetch game requests if request is true
+    if (request) {
+        fetch(`/game/${request}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data) {
+                    data.forEach(gameRequest => {
+                        if (gameRequest.accept) {
+
+                            console.log(`data:${gameRequest.opponent},list:${gameRequest}`);
+
+                            addGameElement(gameRequest.opponent); // Add game element if accepted
+                        }
+                    });
+                }
+            }).catch(error => console.error('Error fetching strat request:', error));
+    } else if (list && accept === true) {    // Add game element if the list is valid and accepted
+
+        if (!gamesElement) {
+            headerElement.insertAdjacentHTML('beforeend', headerItem); // Append header only once
+        }
+        addGameElement(opponent); // Add game element for the accepted game
+    }
+}
+
+function addGameElement(opponent) {
+    console.log("addGameElement:"+ opponent);
+    
+    const gamesElement = document.getElementById("games");
+    if (![...gamesElement.children].some(item => item.textContent.includes(opponent))) {// if the game element already exists to avoid duplicates
+        gamesElement.innerHTML += `
+    <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
+        <div class="item">${opponent}</div>
+        <div class="item" onclick="gamelist('${opponent}', false)">Play 🎮</div>
+    </li>`;
+    }
+}
+
+function getAcceptedRequests() {
+    fetch(`/request/acceptedRequests`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            console.error(data.error);
+            return;
+        }
+        // Update the UI with the received data
+        console.log(data);
+        updateAcceptedRequestsUI(data);
+    })
+    .catch(error => console.error('Error fetching accepted requests:', error));
+}
+
+function accept(opponent) {
+    sendRequestAction(`/request/accept/${opponent}`);
+    fetchGameRequests(); 
+}
+
+// Function to reject a request
+function reject(opponent) {
+    sendRequestAction(`/request/reject/${opponent}`);
+    fetchGameRequests(); 
+}
+
+function sendRequestAction(url) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then(response => response.json())
+        .then(() => fetchGameRequests())
+        .catch(error => console.error('Error updating request:', error));
+}
+function sendPlayingRequest(opponent){
+
+}
+    </script>
+	{% endblock script %}
+	{% block body %}
+	
+			<h1>Tic Tac Toe</h1>
+		
+			{# <form action="{{ path('game_start') }}" method="post">
+				<button type="submit" id="play" name="play">Play</button>
+			</form> #}
+			{{ form_start(form) }}
+			{{ form_widget(form) }}
+			<button type="submit" id="play">Search</button>
+			{{ form_end(form) }}
+			{% set data = app.request.get('users') %}
+			{% if data is not empty%}
+				<div>
+					<h3>Search Results:</h3>
+					<ul class="menu2">
+						{% for user in data %}
+							<li class="listitem">
+								{{ user.username }}
+									<button id="play" class="small" name="play" onclick="sendPlayingRequest('{{user.username}}')">Play</button>
+							</li>
+						{% endfor %}
+		
+					</ul>
+					</div>
+				{% endif %}
+			{% endblock %}
