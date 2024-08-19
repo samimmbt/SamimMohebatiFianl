@@ -173,9 +173,13 @@ class GameController extends AbstractController
             $this->entityManager->flush();
             $logger->info("it can play");
             return $this->redirectToRoute('game_page', ['gameId' => $game->getId()]);
-        } 
-        return $this->redirectToRoute('game_page');
+        } else{
+                    return $this->redirectToRoute('home');
+        }
     }
+
+// _______________________________________________________________________________________________________________
+    //move logic ----------------------------------------------------------------------------------------------
 
     #[Route('/move/{gameId}', name: 'make_move', methods: ['POST'])]
     public function makeMove(Request $request, $gameId): Response
