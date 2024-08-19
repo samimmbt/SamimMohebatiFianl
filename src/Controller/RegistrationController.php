@@ -34,35 +34,6 @@ class RegistrationController extends AbstractController
         return $this->render('index.html.twig');
     }
 
-    #[Route('/home', name: 'home')]
-    public function home(Request $request, LoggerInterface $logger): Response
-    {
-        $form = $this->createForm(UserSearchType::class,null,['attr' => ['id' => 'form']]);
-        $form->handleRequest($request);
-        $users = [];
-        if ($form->isSubmitted() && $form->isValid()) {
-            $data = $form->getData();
-            $users = $this->entityManager->getRepository(User::class)->searchUsers($data['username']);            
-            $logger->info("Form submitted:", [// Log the search results
-                'form' => $data,
-                'users' => $users, // Log all users found
-            ]);
-            $userArray = [];
-        foreach ($users as $user) {
-            $userArray[] = [
-                'id' => $user->getId(),          // Get user ID
-                'username' => $user->getUsername() // Get username
-            ];
-            $logger->info('User found: ' . $user->getUsername() . "data:" . $data['username'],['Data'=>$userArray]);
-        }
-
-        return $this->redirectToRoute('home', ['users' => $userArray]);
-            // return new JsonResponse(['users'=>$users]);
-        }
-        
-        return $this->render('game/index.html.twig', ['game' => null, 'rank' => null, 'error' => null, 'users' => $users, 'form' => $form->createView()]);
-    }
-
     #[Route('/signup', name: 'app_register')]
     public function register(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordEncoder, AuthenticationUtils $auth): Response
     {
