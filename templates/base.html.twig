@@ -13,6 +13,7 @@
 				{{ importmap('app') }}
 			{% endblock %}
 		{% endblock %}
+	{% block script %}{% endblock script %}
 	</head>
 	<body>
 		{% if app.user %}
@@ -21,6 +22,5 @@
 		{% block body %}
 			{% block error %}{% endblock %}
 		{% endblock %}
-		{% block script %}{% endblock script %}
 	</body>
 </html>

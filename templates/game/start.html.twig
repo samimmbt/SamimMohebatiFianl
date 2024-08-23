@@ -13,35 +13,80 @@
 		<a href="{{ path('app_logout') }}" title="Logout">Logout</a>
 	</div>
 {% endblock %}
+{% block script %}
+	<script>
+document.addEventListener('DOMContentLoaded', () => {
+        setInterval(() => {
+            window.location.reload();
+        }, 3500); // Correctly set up to call handelRequest every 5 seconds
+    });
+function makeMove(position, gameId, element) {
+    if (!element.classList.contains('disabled')) {
+        handelRequest(gameId, position);
+    }
+}
+
+function handelRequest(gameid, position = null) {
+    fetch(`/move/${gameid}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'  // Important for Symfony to recognize it as an AJAX request
+        },
+        body: JSON.stringify({
+            position: position
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update each cell of the board
+                data.board.forEach((value, index) => {
+                    let cell = document.getElementById(`position_${index}`);
+                    if (cell) {
+                        cell.textContent = value; // Assuming each cell has a text content area
+                    }
+                });
+            } else {
+                // alert('Move could not be made: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error making move:', error));
+}
+	</script>
+{% endblock %}
 {% block body %}
 
-		<h1>Tic Tac Toe</h1>
-		{% if game is not null and game == true%}
-			<p>Game is active!</p>
-			<form id="form" action="{{ path('make_move',{ gameId: game.id }) }}" method="post">
-				<table>
-					{% for row in 0..2 %}
-						<tr>
-							{% for col in 0..2 %}
-								<td>
-									{% set position = (row * 3) + col %}
-									{% if board[position] is defined and board[position] == "X"%}
-										<label class="gamebtn">
-											{{ board[position]}}</label>
-									{% elseif board[position] == null %}
-										<input type="submit" id="{{ position }}" name="position" value="{{ position }}" hidden>
-										<label for="{{ position }}" class="gamebtn {% if currentTurn != 'player1' %}disabled{% endif %}"></label>
-	
-									{% endif %}
-								</td>
-							{% endfor %}
-						</tr>
-					{% endfor %}
-				</table>
-			</form>
-		{% else %}
-			{% if app.user.userIdentifier is not null %}
-				<p>{{app.user.userIdentifier}}
-					is waiting for a player to join</p>
-			{% endif %}
-		{% endblock %}
+	<h1>Tic Tac Toe</h1>
+	{% if game is not null and game == true%}
+		<p>Game is
+			{% if currentTurn != playerRole %}disabled
+			{% else %}
+				Active
+			{% endif %}!</p>
+		<form id="form" action="{{ path('make_move',{ gameId: game.id }) }}" method="post">
+			<table>
+				{% for row in 0..2 %}
+					<tr>
+						{% for col in 0..2 %}
+							{% set position = (row * 3) + col %}
+							<td>
+								{% if board[position] %}
+									<label class="gamebtn">{{ board[position] }}</label>
+								{% else %}
+									<input type="button" id="position_{{ position }}" name="position" value="{{ position }}" hidden>
+									<label for="position_{{ position }}" class="gamebtn {% if currentTurn != playerRole %}disabled{% endif %}" onclick="makeMove({{ position }},{{game.id}},this);"></label>
+								{% endif %}
+							</td>
+						{% endfor %}
+					</tr>
+				{% endfor %}
+			</table>
+		</form>
+	{% else %}
+		{% if app.user.userIdentifier is not null %}
+			<p>{{app.user.userIdentifier}}
+				is waiting for a player to join</p>
+		{% endif %}
+	{% endif %}
+{% endblock %}

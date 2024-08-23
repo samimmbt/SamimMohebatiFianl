@@ -12,113 +12,101 @@
 	</div>
 {% endblock %}
 {% block script %}
-<script>
-
-let isFetching = false; // Flag to control fetching
-
-document.addEventListener('DOMContentLoaded', () => {
-    fetchGameRequests(); // Initial fetch when the page loads
+	<script>
+    
+let isFetching = false;
+let userIdentifier = '{{ app.user.userIdentifier }}'; // Getting Current user username
+document.addEventListener('DOMContentLoaded', () => { // fetchGameRequests(); // Initial fetch when the page loads
+    setInterval(fetchGameRequests, 5000); // Fetch game requests every 5 seconds
 });
-
-// Function to fetch game requests
+/*
+* Function to fetch game requests
+*/
 function fetchGameRequests() {
-    if (isFetching) return; // Prevent multiple fetches at the same time
+    if (isFetching)
+        return;
+    // Prevent multiple fetches at the same time
     isFetching = true; // Set the flag to true
-
-    fetch(`/request`)
-        .then(response => response.json())
-        .then(data => {
-            updateRequestPanel(data);
-            getAcceptedRequests(); // Fetch accepted requests after updating the request panel
-        })
-        .catch(error => console.error('Error fetching requests:', error))
-        .finally(() => {
-            isFetching = false; // Reset the flag after fetching
-        });
+    fetch(`/request`).then(response => response.json()).then(data => {
+        updateRequestPanel(data); // return this user requests , recived requests
+        getAcceptedRequests(); // Fetch accepted requests after updating the request panel
+    }).catch(error => console.error('Error fetching requests:', error)).finally(() => {
+        isFetching = false; // Reset the flag after fetching
+    });
 }
 
-// Function to fetch accepted requests
+/*
+* Function to fetch accepted requests
+*/
 function getAcceptedRequests() {
     fetch(`/request/acceptedRequests`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            updateAcceptedRequestsUI(data); // Update the UI with the received data
-        })
-        .catch(error => console.error('Error fetching accepted requests:', error));
+            'Content-Type': 'application/json'
+        }
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    }).then(data => {
+        updateAcceptedRequestsUI(data); // Update the UI with the received data
+    }).catch(error => console.error('Error fetching accepted requests:', error));
 }
 
-// Function to accept a request
+/*
+* Function to accept a request
+*/
 function accept(opponent) {
     fetch(`/request/accept/${opponent}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                fetchGameRequests(); // Fetch updated requests after accepting
-            }
-        })
-        .catch(error => console.error('Error accepting request:', error));
+            'Content-Type': 'application/json'
+        }
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            fetchGameRequests(); // Fetch updated requests after accepting
+        }
+    }).catch(error => console.error('Error accepting request:', error));
 }
 
-// Function to reject a request
+/*
+*   Function to reject a request
+*/
+
 function reject(opponent) {
     fetch(`/request/reject/${opponent}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                fetchGameRequests(); // Fetch updated requests after rejecting
-            }
-        })
-        .catch(error => console.error('Error rejecting request:', error));
+            'Content-Type': 'application/json'
+        }
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            fetchGameRequests(); // Fetch updated requests after rejecting
+        }
+    }).catch(error => console.error('Error rejecting request:', error));
 }
 
-function gamelist(request, list) {//does two work first its a request it sends a request else it will add item to header named Games
-    const { opponent, accept } = list;
+function gamelist(request, list) { // does two work first its a request it sends a request else it will add item to header named Games
+    const { opponent, accept, reciver } = list;
     const headerElement = document.getElementById("header");
     const gamesElement = document.getElementById("games");
     const headerItem = '<div id="games" class="menu" title="Game list">Games</div>';
-    console.log(`request:${request},list:${list}`);
-    // Fetch game requests if request is true
+    console.log("list: " + list.receiver);
     if (request) {
-        fetch(`/game/${request}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data) {
-                    data.forEach(gameRequest => {
-                        if (gameRequest.accept) {
-
-                            console.log(`data:${gameRequest.opponent},list:${gameRequest}`);
-
-                            addGameElement(gameRequest.opponent); // Add game element if accepted
-                        }
-                    });
-                }
-            }).catch(error => console.error('Error fetching strat request:', error));
-    } else if (list && accept === true) {    // Add game element if the list is valid and accepted
-
+        fetch(`/game/${request}`).then(response => response.json()).then(data => {
+            if (data.success && data.redirectUrl) {
+                window.location.href = data.redirectUrl; // redirect using JavaScript
+            }
+            console.log("data: ".data);
+        }).catch(error => console.error('Error fetching start request:', error));
+    } else if (list && accept === true) {
         if (!gamesElement) {
             headerElement.insertAdjacentHTML('beforeend', headerItem); // Append header only once
         }
-        addGameElement(opponent); // Add game element for the accepted game
+
+        const displayUser = (reciver === userIdentifier) ? opponent : reciver;
+        addGameElement(displayUser); // add game element for the accepted game
     }
 }
 
@@ -136,7 +124,8 @@ function updateRequestPanel(data) {
             requestsElement.innerHTML += `
             <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
                 <div class="item">${opponent}</div>
-                <div class="item" onclick="${acceptRejectFunction}('${opponent}')">${accept ? '❌' : '✅'}</div>
+                <div class="item" onclick="${acceptRejectFunction}('${opponent}')">${accept ? '❌' : '✅'
+                }</div>
             </li>`;
 
             requestCount++;
@@ -148,15 +137,23 @@ function updateRequestPanel(data) {
     }
     requestsElement.innerHTML += `Requests: ${requestCount}`;
 }
-
 // Function to update the accepted requests UI
 function updateAcceptedRequestsUI(data) {
+    const headerElement = document.getElementById("header");
     const gamesElement = document.getElementById("games");
-    gamesElement.innerHTML = ""; // Clear previous games
+    const headerItem = '<div id="games" class="menu" title="Game list">Games</div>';
 
     if (data.length > 0) {
-        data.forEach(gameRequest => {
-            addGameElement(gameRequest.opponent); // Add game element for each accepted request
+        if (!gamesElement) {
+            headerElement.insertAdjacentHTML('beforeend', headerItem); // Append header only once
+        } data.forEach(gameRequest => {
+            // if(gameRequest.opponent === userIdentifier){
+            //     addGameElement(userIdentifier);
+            // }else{
+            // console.log("gameRequest",gameRequest);
+            addGameElement(gameRequest.opponent);
+            // Add game element for each accepted request where the sender is me
+            // }
         });
     }
 }
@@ -165,18 +162,17 @@ function sendPlayingRequest(opponent) {
     fetch(`/request/send/${opponent}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                fetchGameRequests(); // Fetch updated requests after rejecting
-            }
-        })
-        .catch(error => console.error('Error rejecting request:', error));
+            'Content-Type': 'application/json'
+        }
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            fetchGameRequests(); // Fetch updated requests after rejecting
+        }
+    }).catch(error => console.error('Error rejecting request:', error));
 }
-
+function playGame(opponent) {
+    window.location.href = `/Tic/Tac/Toe?opponent=${opponent}`; // Assuming the backend can handle this GET parameter
+}
 // Function to add game elements
 function addGameElement(opponent) {
     const gamesElement = document.getElementById("games");
@@ -184,37 +180,32 @@ function addGameElement(opponent) {
         gamesElement.innerHTML += `
             <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
                 <div class="item">${opponent}</div>
-                <div class="item" onclick="gamelist('${opponent}', false)">Play 🎮</div>
+                <div class="item" onclick="playGame('${opponent}', false)">Play 🎮</div>
             </li>`;
     }
 }
+	</script>
+{% endblock script %}
+{% block body %}
 
-    </script>
-	{% endblock script %}
-	{% block body %}
-	
-			<h1>Tic Tac Toe</h1>
-		
-			{# <form action="{{ path('game_start') }}" method="post">
-				<button type="submit" id="play" name="play">Play</button>
-			</form> #}
-			{{ form_start(form) }}
-			{{ form_widget(form) }}
-			<button type="submit" id="play">Search</button>
-			{{ form_end(form) }}
-			{% set data = app.request.get('users') %}
-			{% if data is not empty%}
-				<div>
-					<h3>Search Results:</h3>
-					<ul class="menu2">
-						{% for user in data %}
-							<li class="listitem">
-								{{ user.username }}
-									<button id="play" class="small" name="play" onclick="sendPlayingRequest('{{user.username}}')">Play</button>
-							</li>
-						{% endfor %}
-		
-					</ul>
-					</div>
-				{% endif %}
-			{% endblock %}
+	<h1>Tic Tac Toe</h1>
+	{{ form_start(form) }}
+	{{ form_widget(form) }}
+	<button type="submit" id="play">Search</button>
+	{{ form_end(form) }}
+	{% set data = app.request.get('users') %}
+	{% if data is not empty%}
+		<div>
+			<h3>Search Results:</h3>
+			<ul class="menu2">
+				{% for user in data %}
+					<li class="listitem">
+						{{ user.username }}
+						<button id="play" class="small" name="play" onclick="sendPlayingRequest('{{user.username}}')">Play</button>
+					</li>
+				{% endfor %}
+
+			</ul>
+		</div>
+	{% endif %}
+{% endblock %}
