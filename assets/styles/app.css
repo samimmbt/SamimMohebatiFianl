@@ -14,15 +14,15 @@ body {
     position: relative;
     /* top: 25%; */
     background-color: #F5EDED;
-    width: 25vw;
+    width: 19vw;
     height: 25vh;
     border-radius: 30px;
     padding: 2%;
     display: flex;
     flex-wrap: nowrap;
     flex-direction: column;
-    justify-content: space-around;
-    align-content: center;
+    justify-content: center;
+    align-items: center;
 }
 
 input:not(input[type=checkbox]) {
@@ -42,7 +42,7 @@ button.btn,
     height: 3vh;
 }
 
-label {
+label:not(.gamebtn){
     align-self: flex-start;
     margin-left: 10%;
 }
@@ -164,7 +164,7 @@ label.gamebtn {
     overflow-y: scroll;
 } */
 
-.disable {
+.disabled {
     filter: opacity(0.5);
     pointer-events: none;
     cursor: not-allowed;
