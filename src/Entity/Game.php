@@ -17,13 +17,13 @@ class Game
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'games')]
-    private ?User $player1Id = null;
+    private ?User $player1 = null;
 
     #[ORM\ManyToOne(inversedBy: 'games')]
-    private ?User $player2Id = null;
+    private ?User $player2 = null;
 
-    #[ORM\ManyToOne(inversedBy: 'winnerId')]
-    private ?User $winnerId = null;
+    #[ORM\ManyToOne(inversedBy: 'winner')]
+    private ?User $winner = null;
 
     #[ORM\Column(length: 255)]
     private ?string $status = null;
@@ -53,38 +53,38 @@ class Game
         return $this->id;
     }
 
-    public function getPlayer1Id(): ?User
+    public function getPlayer1(): ?User
     {
-        return $this->player1Id;
+        return $this->player1;
     }
 
-    public function setPlayer1Id(?User $player1Id): static
+    public function setPlayer1(?User $player1): static
     {
-        $this->player1Id = $player1Id;
+        $this->player1 = $player1;
 
         return $this;
     }
 
-    public function getPlayer2Id(): ?User
+    public function getPlayer2(): ?User
     {
-        return $this->player2Id;
+        return $this->player2;
     }
 
-    public function setPlayer2Id(?User $player2Id): static
+    public function setPlayer2(?User $player2): static
     {
-        $this->player2Id = $player2Id;
+        $this->player2 = $player2;
 
         return $this;
     }
 
-    public function getWinnerId(): ?User
+    public function getWinner(): ?User
     {
-        return $this->winnerId;
+        return $this->winner;
     }
 
-    public function setWinnerId(?User $winnerId): static
+    public function setWinner(?User $winner): static
     {
-        $this->winnerId = $winnerId;
+        $this->winner = $winner;
 
         return $this;
     }
