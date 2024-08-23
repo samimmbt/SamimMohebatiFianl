@@ -26,13 +26,14 @@ class RequestController extends AbstractController
         $this->eventDispatcher = $eventDispatcher;
 
     }
-    #[Route('/request/send/{opponent}', name: 'send_request')]
-    public function sendRequest(string $opponent): JsonResponse
+    //dto 
+    #[Route('/request/send/{username}', name: 'send_request')]//updated 
+    public function sendRequest(String $username): JsonResponse
     {
-        $user = $this->entityManager->getRepository(User::class)->findOneBySomeField(['username' => $opponent]);
-
+         $user = $this->entityManager->getRepository(User::class)->findOneBySomeField(['username' => $username]);
         if (!$user) {
-            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+            throw $this->createNotFoundException('User is not here');
+            // return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
         // Logic to send the request
@@ -41,7 +42,7 @@ class RequestController extends AbstractController
         $this->entityManager->flush();
 
         // Dispatch the event for sending the request
-        $this->eventDispatcher->dispatch(new GameRequestEvent($user, $opponent, 'send'));
+        $this->eventDispatcher->dispatch(new GameRequestEvent($user, $user->getUsername(), 'send'));
 
         return $this->json(['success' => 'Request sent']);
     }
@@ -81,11 +82,10 @@ public function getAcceptedRequests(Request $request): JsonResponse
                 'opponent' => $otherUser->getUserIdentifier(),
                 'requests' => $requests,
             ];
-            $this->eventDispatcher->dispatch(new GameRequestEvent($user, $otherUser->getUserIdentifier(), 'accept'));
 
         }
     }
-
+    $this->eventDispatcher->dispatch(new GameRequestEvent($user, $user->getUserIdentifier(), 'accepted_requests'));
     return $this->json($acceptedRequests);
 }
 
