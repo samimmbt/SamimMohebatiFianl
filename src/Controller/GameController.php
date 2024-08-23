@@ -28,7 +28,6 @@ class GameController extends AbstractController
         $this->entityManager = $entityManager;
         $this->board = array_fill(0, 9, null); // Initialize the board
         $this->eventDispatcher = $eventDispatcher;
-
     }
 
     #[Route('/home', name: 'home')]
@@ -62,33 +61,59 @@ class GameController extends AbstractController
 
 
     #[Route('/Tic/Tac/Toe', name: 'game_page')]
-    public function game(Request $request, AuthenticationUtils $authenticationUtils, LoggerInterface $logger): Response
+    public function launchGame(Request $request, LoggerInterface $logger): Response
     {
-        $gameId = $request->query->get('gameId', null);
-        $game = $this->entityManager->getRepository(Game::class)->find($gameId);
-        $board = $game->getBoard();
-        $users = [];
-        $error = $authenticationUtils->getLastAuthenticationError();
+        $opponentUsername = $request->query->get('opponent');
+        $currentUser = $this->getUser();
 
-        $logger->info("Game info:", [
-            'game' => $game,
-            'board' => $board,
-            'error' => $error,
-            'users' => $users,
-        ]);
-        if (!$gameId) {
-            return $this->redirectToRoute('game_page', [
-                'game' => $game,
-                'board' => $board,
-                'error' => $error,
-                'users' => $users,
-            ]);
+        if ($opponentUsername === null) {
+            $logger->info('Redirecting to home due to missing opponent username.');
+            return $this->redirectToRoute('home');
         }
+
+        $opponent = $this->entityManager->getRepository(User::class)->findOneByUsername($opponentUsername);
+        if ($opponent === null) {
+            $logger->error('Opponent with username ' . $opponentUsername . ' not found.');
+            throw $this->createNotFoundException('Opponent not found');
+        }
+
+        $game = $this->entityManager->getRepository(Game::class)->findGameByPlayers($currentUser, $opponent);
+
+        if ($game === null || $game->getStatus() !== 'in_progress') {
+            // If no game is found or the game is not in progress, create a new one
+            $game = new Game();
+            $game->setBoard(array_fill(0, 9, null)); // Assuming a 3x3 Tic Tac Toe board
+            $game->setStatus('in_progress');
+            $game->setCreatedAt(new \DateTime());
+
+            // Randomly assign the starting player
+            if (rand(0, 1) === 0) {
+                $game->setPlayer1($currentUser);
+                $game->setPlayer2($opponent);
+                $currentTurn = 'player1';
+            } else {
+                $game->setPlayer1($opponent);
+                $game->setPlayer2($currentUser);
+                $currentTurn = 'player2';
+            }
+
+            $game->setCurrentTurn($currentTurn);
+
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+
+            $logger->info('New game created between ' . $currentUser->getUserIdentifier() . ' and ' . $opponent->getUsername());
+        }
+        $playerRole = ($game->getPlayer1() === $currentUser) ? 'player1' : 'player2';
+        $playerMark = ($game->getPlayer1() === $currentUser) ? 'X' : 'O';
+        // Render the game view with the necessary game details
         return $this->render("game/start.html.twig", [
+            'playerRole' => $playerRole,
+            'playerMark' => $playerMark,
+            'gameId' => $game->getId(),
             'game' => $game,
-            'board' => $board,
-            'error' => $error,
-            'users' => $users,
+            'board' => $game->getBoard(),
+            'currentTurn' => $game->getCurrentTurn()
         ]);
     }
 
@@ -133,88 +158,107 @@ class GameController extends AbstractController
         $error = $authenticationUtils->getLastAuthenticationError();
         return $this->redirectToRoute('game_page', ['game' => false, 'board' => $board, 'error' => $error]);
     }
+    
+   
+    //     #[Route('/game/{userName}', name: 'start_game')]
+    //     public function startGame(string $userName, LoggerInterface $logger): Response //username is opponent id 
+    //     {
+    //         $user = $this->entityManager->getRepository(User::class)->findOneBySomeField(['username' => $userName]);
+    //         if (!$user) {
+    //             throw $this->createNotFoundException('User not found !!!');
+    //         }
 
-    #[Route('/game/{userName}', name: 'start_game')]
-    public function startGame(string $userName, LoggerInterface $logger): Response //username is opponent id 
-    {
-        $user = $this->entityManager->getRepository(User::class)->findOneBySomeField(['username' => $userName]);
-        if (!$user) {
-            throw $this->createNotFoundException('User not found !!!');
-        }
+    //         // Check if the user has an active request to play
+    //         $requests = $user->getRequests(); //getting the user requests from database
+    //         $canPlay = false;
+    //         $logger->info("requests: ", ['requests' => $requests]);
 
-        // Check if the user has an active request to play
-        $requests = $user->getRequests(); //getting the user requests from database
-        $canPlay = false;
-        $logger->info("requests: ",['requests'=>$requests]);
+    //         if ($requests != null) {
+    //             foreach ($requests as $request) {
+    //                 if ($request['accept'] === true && $request['opponent'] === $this->getUser()->getUserIdentifier() || $request['reciver'] === $this->getUser()->getUserIdentifier()) {
+    //                     $canPlay = true;
+    //                     break;
+    //                 }
+    //             }
+    //         }
+    //         $logger->info("can play?" . ($canPlay ? "yes" : "no"));
+    //         if ($canPlay) {
+    //             // Create a new Game entity and persist it
+    //             $game = new Game();
+    //             $game->setPlayer1Id($this->getUser());
+    //             $game->setPlayer2Id($user);
+    //             $game->setBoard(array_fill(0, 9, null));
+    //             $game->setStatus('in_progress');
+    //             $game->setCreatedAt(new \DateTime());
 
-        if ($requests != null) {
-            foreach ($requests as $request) {
-                if ($request['accept'] === true && $request['opponent'] === $this->getUser()->getUserIdentifier()) {
-                    $canPlay = true;
-                    break;
-                }
-            }
-        }
-        $logger->info("can play?" . ($canPlay ? "yes" : "no"));
-        if ($canPlay) {
-            // Create a new Game entity and persist it
-            $game = new Game();
-            $game->setPlayer1Id($this->getUser());
-            $game->setPlayer2Id($user);
-            $game->setBoard(array_fill(0, 9, null));
-            $game->setStatus('in_progress');
-            $game->setCreatedAt(new \DateTime());
+    //             // Randomly assign the starting player
+    //             $currentTurn = rand(0, 1) ? 'player1' : 'player2';
+    //             $game->setCurrentTurn($currentTurn);
 
-            // Randomly assign the starting player
-            $currentTurn = rand(0, 1) ? 'player1' : 'player2';
-            $game->setCurrentTurn($currentTurn);
+    //             $this->entityManager->persist($game);
+    //             $this->entityManager->flush();
+    //             $logger->info("it can play");
 
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            $logger->info("it can play");
-            return $this->redirectToRoute('game_page', ['gameId' => $game->getId()]);
-        } else{
-                    return $this->redirectToRoute('home');
-        }
-    }
+    // $data = [
+    //         'success' => true,
+    //         'redirectUrl' => $this->generateUrl('game_page', ['gameId' => $game->getId()])
+    //     ];
 
-// _______________________________________________________________________________________________________________
+    //     // Return JSON response
+    //     return new JsonResponse($data);        
+    // } else {
+    //             return $this->redirectToRoute('home');
+    //         }
+    //     }
+
+    // _______________________________________________________________________________________________________________
     //move logic ----------------------------------------------------------------------------------------------
 
     #[Route('/move/{gameId}', name: 'make_move', methods: ['POST'])]
-    public function makeMove(Request $request, $gameId): Response
+    public function makeMove(Request $request, $gameId, LoggerInterface $logger): Response
     {
         $game = $this->entityManager->getRepository(Game::class)->find($gameId);
         if (!$game || $game->getStatus() !== 'in_progress') {
-            throw $this->createNotFoundException('Game not found or not in progress');
+            return $this->json(['success' => false, 'message' => 'Game not found or not in progress']);
         }
 
-        $position = $request->request->get('position');
+        $data = json_decode($request->getContent(), true);
+        $position = $data['position'];
         $user = $this->getUser(); // Assuming the user is authenticated
+        $playerMark = $game->getCurrentTurn() === 'player1' ? 'X' : 'O';
 
-        // Check if it is the current player's turn
-        if (($game->getCurrentTurn() === 'player1' && $game->getPlayer1Id() === $user) ||
-            ($game->getCurrentTurn() === 'player2' && $game->getPlayer2Id() === $user)
-        ) {
+        if (($game->getCurrentTurn() === 'player1' && $game->getPlayer1() === $user ||
+            $game->getCurrentTurn() === 'player2' && $game->getPlayer2() === $user) && $position !== null) {
             // Check if the position is valid and not already taken
             if ($game->getBoard()[$position] === null) {
-                $game->getBoard()[$position] = $user->getUserIdentifier(); // Mark the board with the player's username
+                $logger->info($playerMark . " user can move to " . $position);
+                $board = $game->getBoard();
+                $board[$position] = $playerMark;
+                $game->setBoard($board); // Update the board
+
                 $move = new Move();
                 $move->setGame($game);
                 $move->setPlayer($user);
                 $move->setPosition($position);
                 $move->setCreatedAt(new \DateTime()); // Set the move timestamp
 
+                $game->setCurrentTurn($game->getCurrentTurn() === 'player1' ? 'player2' : 'player1'); // Switch turns
+
                 $this->entityManager->persist($move);
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
 
-                // Switch turns
-                $game->setCurrentTurn($game->getCurrentTurn() === 'player1' ? 'player2' : 'player1');
+                return $this->json([
+                    'success' => true,
+                    'playerMark' => $playerMark,
+                    'message' => 'Move made successfully',
+                    'board' => $game->getBoard() // Return the updated board
+                ]);
+            } else {
+                return $this->json(['success' => false, 'message' => 'Position already taken']);
             }
+        } else {
+            return $this->json(['success' => false, 'message' => 'Not your turn']);
         }
-
-        return $this->redirectToRoute('game_page', ['gameId' => $gameId]);
     }
-
 }
