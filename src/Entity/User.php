@@ -34,13 +34,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Game>
      */
-    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'player1Id')]
+    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'player1')]
     private Collection $games;
 
     /**
      * @var Collection<int, Game>
      */
-    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'winnerId')]
+    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'winner')]
     private Collection $gameWinner;
 
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
@@ -149,7 +149,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->games->contains($game)) {
             $this->games->add($game);
-            $game->setPlayer1Id($this);
+            $game->setPlayer1($this);
         }
 
         return $this;
@@ -159,8 +159,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->games->removeElement($game)) {
             // set the owning side to null (unless already changed)
-            if ($game->getPlayer1Id() === $this) {
-                $game->setPlayer1Id(null);
+            if ($game->getPlayer1() === $this) {
+                $game->setPlayer1(null);
             }
         }
 
@@ -175,11 +175,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->gameWinner;
     }
 
-    public function addGgameWinner(Game $gameWinner): static
+    public function addGameWinner(Game $gameWinner): static
     {
         if (!$this->gameWinner->contains($gameWinner)) {
             $this->gameWinner->add($gameWinner);
-            $gameWinner->setWinnerId($this);
+            $gameWinner->setWinner($this);
         }
 
         return $this;
@@ -189,8 +189,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->gameWinner->removeElement($gameWinner)) {
             // set the owning side to null (unless already changed)
-            if ($gameWinner->getWinnerId() === $this) {
-                $gameWinner->setWinnerId(null);
+            if ($gameWinner->getWinner() === $this) {
+                $gameWinner->setWinner(null);
             }
         }
 
@@ -214,7 +214,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->requests[] = [
             'accept' => null, // Initially set to null
             'opponent' => $sender,
-            'reciver' => $reciver
+            'reciver' => $reciver,
+            'gameId'=>null
         ];
         return $this;
     }
