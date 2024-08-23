@@ -47,4 +47,18 @@ class UserRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
         ;
     }
+
+    // src/Repository/UserRepository.php
+
+    public function findAcceptedRequestsForUser(User $user): array
+    {
+        $qb = $this->createQueryBuilder('u');
+        $qb->select('r')
+            ->join('u.requests', 'r')
+            ->where('r.accepted = true')
+            ->andWhere('r.receiver = :user OR r.sender = :user')
+            ->setParameter('user', $user);
+
+        return $qb->getQuery()->getResult();
+    }
 }

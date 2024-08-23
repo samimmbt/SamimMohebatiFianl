@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Game;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,18 @@ class GameRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Game::class);
+    }
+
+    public function findGameByPlayers(User $player1, User $player2)
+    {
+        return $this->createQueryBuilder('g')
+            ->where('g.player1 = :player1 AND g.player2 = :player2 OR g.player1 = :player2 AND g.player2 = :player1')
+            ->setParameter('player1', $player1)
+            ->setParameter('player2', $player2)
+            ->andWhere('g.status = :status')
+            ->setParameter('status', 'in_progress') // Assuming you want games that are still in progress
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     //    /**
