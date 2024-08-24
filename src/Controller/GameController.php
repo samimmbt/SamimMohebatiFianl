@@ -5,16 +5,13 @@ namespace App\Controller;
 use App\Entity\Game;
 use App\Entity\Move;
 use App\Entity\User;
-use App\Event\GameRequestEvent;
 use App\Form\UserSearchType;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class GameController extends AbstractController
@@ -79,15 +76,14 @@ class GameController extends AbstractController
 
         $game = $this->entityManager->getRepository(Game::class)->findGameByPlayers($currentUser, $opponent);
 
-        if ($game === null || $game->getStatus() !== 'in_progress') {
-            // If no game is found or the game is not in progress, create a new one
+        if ($game === null || $game->getStatus() !== 'in_progress') {  // If no game is found or the game is not in progress, create a new one
+
             $game = new Game();
             $game->setBoard(array_fill(0, 9, null)); // Assuming a 3x3 Tic Tac Toe board
             $game->setStatus('in_progress');
             $game->setCreatedAt(new \DateTime());
 
-            // Randomly assign the starting player
-            if (rand(0, 1) === 0) {
+            if (rand(0, 1) === 0) {            // Randomly assign the starting player
                 $game->setPlayer1($currentUser);
                 $game->setPlayer2($opponent);
                 $currentTurn = 'player1';
@@ -133,8 +129,7 @@ class GameController extends AbstractController
 
         if (($game->getCurrentTurn() === 'player1' && $game->getPlayer1() === $user ||
             $game->getCurrentTurn() === 'player2' && $game->getPlayer2() === $user) && $position !== null) {
-            // Check if the position is valid and not already taken
-            if ($game->getBoard()[$position] === null) {
+            if ($game->getBoard()[$position] === null) {            // Check if the position is valid and not already taken
                 $logger->info($playerMark . " user can move to " . $position);
                 $board = $game->getBoard();
                 $board[$position] = $playerMark;

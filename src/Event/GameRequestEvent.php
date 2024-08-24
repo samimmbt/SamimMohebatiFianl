@@ -10,7 +10,7 @@ class GameRequestEvent extends Event
 
     private User $user;
     private string $opponent;
-    private string $action; // 'send', 'accept', or 'reject'
+    private string $action; // 'send', 'accept', or 'reject' ...
 
     public function __construct(User $user, string $opponent, string $action)
     {

@@ -15,28 +15,25 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class RequestController extends AbstractController
 {
-    public array $board; // Declare the board as a public property
+    public array $board;
     private $entityManager;
     private EventDispatcherInterface $eventDispatcher;
 
     public function __construct(EntityManagerInterface $entityManager, EventDispatcherInterface $eventDispatcher)
     {
         $this->entityManager = $entityManager;
-        $this->board = array_fill(0, 9, null); // Initialize the board
+        $this->board = array_fill(0, 9, null); // Init the board
         $this->eventDispatcher = $eventDispatcher;
-
     }
     //dto 
-    #[Route('/request/send/{username}', name: 'send_request')]//updated 
+    #[Route('/request/send/{username}', name: 'send_request')] //updated 
     public function sendRequest(String $username): JsonResponse
     {
-         $user = $this->entityManager->getRepository(User::class)->findOneBySomeField(['username' => $username]);
+        $user = $this->entityManager->getRepository(User::class)->findOneBySomeField(['username' => $username]);
         if (!$user) {
             throw $this->createNotFoundException('User is not here');
-            // return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Logic to send the request
         $user->addRequest($this->getUser()->getUserIdentifier(), $user->getUserIdentifier());
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -59,42 +56,39 @@ class RequestController extends AbstractController
         return new JsonResponse($requests);
     }
 
-    // src/Controller/GameController.php
+    #[Route('/request/acceptedRequests', name: 'get_accepted_requests', methods: ['POST'])] //for geting list of accepted requests
+    public function getAcceptedRequests(Request $request): JsonResponse
+    {
+        $user = $this->getUser();
 
-#[Route('/request/acceptedRequests', name: 'get_accepted_requests', methods: ['POST'])]//for geting list of accepted requests
-public function getAcceptedRequests(Request $request): JsonResponse
-{
-    $user = $this->getUser();
-
-    if (!$user instanceof User) {
-        return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
-    }
-
-    // Fetch all users
-    $users = $this->entityManager->getRepository(User::class)->findAll();
-    $acceptedRequests = [];
-
-    // Check each user for accepted requests where the current user is the opponent
-    foreach ($users as $otherUser) {
-        $requests = $otherUser->getAcceptedRequests($user->getUserIdentifier());
-        if (!empty($requests)) {
-            $acceptedRequests[] = [
-                'opponent' => $otherUser->getUserIdentifier(),
-                'requests' => $requests,
-            ];
-
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
+
+        
+        $users = $this->entityManager->getRepository(User::class)->findAll();// Fetch all users
+        $acceptedRequests = [];
+
+        
+        foreach ($users as $otherUser) {// Check each user for accepted requests where the current user is the opponent
+            $requests = $otherUser->getAcceptedRequests($user->getUserIdentifier());
+            if (!empty($requests)) {
+                $acceptedRequests[] = [
+                    'opponent' => $otherUser->getUserIdentifier(),
+                    'requests' => $requests,
+                ];
+            }
+        }
+        $this->eventDispatcher->dispatch(new GameRequestEvent($user, $user->getUserIdentifier(), 'accepted_requests'));
+        return $this->json($acceptedRequests);
     }
-    $this->eventDispatcher->dispatch(new GameRequestEvent($user, $user->getUserIdentifier(), 'accepted_requests'));
-    return $this->json($acceptedRequests);
-}
 
     #[Route('/request/accept/{opponent}', name: 'accept_request')] //for accepting
     public function acceptRequest(string $opponent): Response
     {
         $user = $this->entityManager->getRepository(User::class)->findOneBySomeField($this->getUser()->getUserIdentifier());
         $user->acceptRequest($opponent);
-        // $user->removeRequest($opponent);
+        // $user->removeRequest($opponent); //not useable
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 

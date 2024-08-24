@@ -188,8 +188,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeGamesAsPlayer2(Game $gameWinner): static
     {
         if ($this->gameWinner->removeElement($gameWinner)) {
-            // set the owning side to null (unless already changed)
-            if ($gameWinner->getWinner() === $this) {
+            if ($gameWinner->getWinner() === $this) {            // set the owning side to null
                 $gameWinner->setWinner(null);
             }
         }

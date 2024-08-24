@@ -12,7 +12,7 @@ class RankingController extends AbstractController
     #[Route('/ranking', name: 'app_ranking')]
     public function index(UserRepository $userRepository): JsonResponse
     {
-        $users = $userRepository->findTopUsersByWins(10); // Fetch top 10 users by wins
+        $users = $userRepository->findTopUsersByWins(10); // Fetch top 10 users by wins and return it
 
         $rankingData = array_map(function ($user) {
             return [
