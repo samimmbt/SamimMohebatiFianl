@@ -16,20 +16,20 @@
     
 let isFetching = false;
 let userIdentifier = '{{ app.user.userIdentifier }}'; // Getting Current user username
-document.addEventListener('DOMContentLoaded', () => { // fetchGameRequests(); // Initial fetch when the page loads
+document.addEventListener('DOMContentLoaded', () => { 
     setInterval(fetchGameRequests, 5000); // Fetch game requests every 5 seconds
 });
+
 /*
 * Function to fetch game requests
 */
 function fetchGameRequests() {
     if (isFetching)
         return;
-    // Prevent multiple fetches at the same time
-    isFetching = true; // Set the flag to true
+    isFetching = true; 
     fetch(`/request`).then(response => response.json()).then(data => {
         updateRequestPanel(data); // return this user requests , recived requests
-        getAcceptedRequests(); // Fetch accepted requests after updating the request panel
+        getAcceptedRequests(); 
     }).catch(error => console.error('Error fetching requests:', error)).finally(() => {
         isFetching = false; // Reset the flag after fetching
     });
@@ -109,8 +109,9 @@ function gamelist(request, list) { // does two work first its a request it sends
         addGameElement(displayUser); // add game element for the accepted game
     }
 }
-
-// Function to update the request panel
+/*
+* Function to update the request panel
+*/
 function updateRequestPanel(data) {
     const requestsElement = document.getElementById("requests");
     let requestCount = 0;
@@ -137,7 +138,9 @@ function updateRequestPanel(data) {
     }
     requestsElement.innerHTML += `Requests: ${requestCount}`;
 }
-// Function to update the accepted requests UI
+/*
+* Function to update the accepted requests UI
+*/
 function updateAcceptedRequestsUI(data) {
     const headerElement = document.getElementById("header");
     const gamesElement = document.getElementById("games");
@@ -157,7 +160,9 @@ function updateAcceptedRequestsUI(data) {
         });
     }
 }
-
+/*
+* Function Sending a new request
+*/
 function sendPlayingRequest(opponent) {
     fetch(`/request/send/${opponent}`, {
         method: 'POST',
@@ -170,10 +175,15 @@ function sendPlayingRequest(opponent) {
         }
     }).catch(error => console.error('Error rejecting request:', error));
 }
+/*
+* Function to redirect after accepting
+*/
 function playGame(opponent) {
-    window.location.href = `/Tic/Tac/Toe?opponent=${opponent}`; // Assuming the backend can handle this GET parameter
+    window.location.href = `/Tic/Tac/Toe?opponent=${opponent}`;
 }
-// Function to add game elements
+/*
+* Function to add game elements
+*/
 function addGameElement(opponent) {
     const gamesElement = document.getElementById("games");
     if (![...gamesElement.children].some(item => item.textContent.includes(opponent))) {
@@ -184,7 +194,21 @@ function addGameElement(opponent) {
             </li>`;
     }
 }
+/*
+*Function to show ranks
+*/
 
+function updateRanks(data){
+      const total = data.data.length;
+            data.data.forEach((ranker, index) => {
+    		let intensity = Math.round(200 * (index / (total)));
+    		backgroundColor = `rgb(219, ${intensity+25}, ${intensity})`;
+                ranks.innerHTML += `<div class="ranker" style="background:${backgroundColor}">#${ranker.number} ${ranker.name} ${ranker.wins}</div>`;
+            });
+}
+/*
+* Function to handel Get Ranks 
+*/
 function showRanks() {
 	const secondItem = document.body.children[1];
     const newItem = document.createElement('div');
@@ -201,12 +225,7 @@ function showRanks() {
     }).then(response => response.json())
     .then(data => {
         if (data.success) {
-			  const total = data.data.length;
-            data.data.forEach((ranker, index) => {
-    		let intensity = Math.round(200 * (index / (total)));
-    		backgroundColor = `rgb(219, ${intensity+25}, ${intensity})`;
-                ranks.innerHTML += `<div class="ranker" style="background:${backgroundColor}">#${ranker.number} ${ranker.name} ${ranker.wins}</div>`;
-            });
+			updateRanks(data);//Show rankers in element
         }  else {
             console.error('Failed to load ranking data');
         }
