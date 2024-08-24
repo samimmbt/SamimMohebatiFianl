@@ -1,8 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block header %}
 	<div class="mb-3">
-		<div id="ranking" title="Global Ranking" onclick="showRanks()">
-			Ranking
+		<div id="ranking" title="{{ 'Ranking' | trans }}" onclick="showRanks()">
+			{{ 'Ranking' | trans }}
 		</div>
 		<div id="mode" class="menu menu-icon" title="cooming soon">
 			Mode
@@ -10,7 +10,7 @@
 			<div class="item disable">very hard</div>
 		</div>
 
-		<a href="{{ path('app_logout') }}" title="Logout">Logout</a>
+		<a href="{{ path('app_logout') }}" title="{{ 'Logout' | trans }}">{{ 'Logout' | trans }}</a>
 	</div>
 {% endblock %}
 {% block script %}

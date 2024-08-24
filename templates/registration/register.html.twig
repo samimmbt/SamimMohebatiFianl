@@ -10,12 +10,13 @@
 		{% endif %}
 	{% endblock %}
 	{{ form_start(form) }}
-	<h1>Register</h1>
+	    <h1>{{ 'Register' | trans }}</h1>
 	{{ form_widget(form) }}
 	{{ form_end(form) }}
 
-	<div>Already have an account?
-		<a href="{{path('login')}}">
-			Sign in →</a>
-	</div>
+	<div>{{ 'Already have an account?' | trans }}
+        <a href="{{ path('login') }}">
+            {{ 'Sign in →' | trans }}
+        </a>
+    </div>
 {% endblock %}

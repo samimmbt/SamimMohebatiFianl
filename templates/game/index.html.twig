@@ -1,15 +1,14 @@
 {% extends 'base.html.twig' %}
 {% block header %}
-	<div class="mb-3" id="header">
-		<div id="ranking" title="Global Ranking" onclick="showRanks()">
-			Ranking
-		</div>
-		<div id="requests" class="menu menu-icon" title="requests">
-			Requests
-		</div>
-
-		<a href="{{ path('app_logout') }}" title="Logout">Logout</a>
-	</div>
+<div class="mb-3" id="header">
+    <div id="ranking" title="{{ 'Global Ranking' | trans }}" onclick="showRanks()">
+        {{ 'Ranking' | trans }}
+    </div>
+    <div id="requests" class="menu menu-icon" title="{{ 'Requests' | trans }}">
+        {{ 'Requests' | trans }}
+    </div>
+    <a href="{{ path('app_logout') }}" title="{{ 'Logout' | trans }}">{{ 'Logout' | trans }}</a>
+</div>
 {% endblock %}
 {% block script %}
 	<script>

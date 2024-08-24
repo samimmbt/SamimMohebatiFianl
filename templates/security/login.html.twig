@@ -7,8 +7,8 @@
 	<form id="form" method="post" action="{{ path('login') }}">
 		{% block error %}
 			{% if error %}
-				<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-			{% endif %}
+                <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+            {% endif %}
 		{% endblock %}
 		{% if app.user %}
 			<div class="mb-3">
@@ -19,9 +19,9 @@
 		{% endif %}
 
 		<h1 class="h3 font-weight-normal">Please sign in</h1>
-		<label for="inputUsername">Username</label>
+		<label for="inputUsername">{{'Username'|trans}}</label>
 		<input type="text" name="username" id="inputUsername" class="form-control" autocomplete="username" required autofocus>
-		<label for="inputPassword">Password</label>
+		<label for="inputPassword">{{'Password'|trans}}</label>
 		<input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
 
 		<input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
@@ -29,15 +29,15 @@
 		<div class="checkbox">
 			<label>
 				<input type="checkbox" name="_remember_me">
-				Remember me
+				{{'Remember me'|trans}}
 			</label>
 		</div>
 
 		<button class="btn btn-lg btn-primary" type="submit">
-			Sign in
+			{{'Sign in'|trans}}
 		</button>
 	</form>
 	<div>New to X/O?
-		<a href="{{path('app_register')}}">Create an account</a>
+		<a href="{{path('app_register')}}">{{'Create an account'|trans}}</a>
 	</div>
 {% endblock %}
