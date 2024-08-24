@@ -15,7 +15,7 @@
 {% endblock %}
 {% block script %}
 	<script>
-	let gameId = {{gameId}} , playerRole = '{{playerRole}}';
+	let gameId = {{gameId}} , playerRole = '{{playerRole}}';//get data needed from twig and php
 
 let checkInterval;
 
@@ -23,9 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set and store the interval ID
     checkInterval = setInterval(() => {
         handleWinner(gameId);
-    }, 5000);
+    }, 3000);
 });
-
+/*
+* Function for knowing who is winner
+*/
 function handleWinner(gameId) {
     fetch(`/check-winner/${gameId}`, {
         method: 'POST',
@@ -56,19 +58,26 @@ function handleWinner(gameId) {
         }, 5000);  // Attempt to reload on error
     });
 }
+/*
+* Function for making a move
+*/
 function makeMove(position, gameId, element) {
     if (!element.classList.contains('disabled')) {
         element.classList.add('disabled'); // Prevent further clicks on this cell
         handleMoves(gameId, position);
     }
 }
-
+/*
+* Function for knowing who is winner
+*/
 function displayWinner(message) {
     const winnerMessage = document.getElementById('winnerMessage');
     winnerMessage.textContent = message;
     winnerMessage.style.display = 'block';
 }
-
+/*
+* Function for handeling the Moves
+*/
 function handleMoves(gameId, position = null) {
     fetch(`/move/${gameId}`, {
         method: 'POST',
@@ -88,7 +97,9 @@ function handleMoves(gameId, position = null) {
     })
     .catch(error => console.error('Error making move:', error));
 }
-
+/*
+* Function for Updating the board
+*/
 function updateBoard(board) {
     board.forEach((value, index) => {
         let cell = document.getElementById(`label_${index}`);
@@ -97,12 +108,26 @@ function updateBoard(board) {
         }
     });
 }
+/*
+*Function to show ranks and give them diffrent background
+*/
 
+function updateRanks(data){
+      const total = data.data.length;
+            data.data.forEach((ranker, index) => {
+    		let intensity = Math.round(200 * (index / (total)));// 1/10 = 0.1 * 200 = 20 || 2/10 = 0.2 * 200 = 40 
+    		backgroundColor = `rgb(219, ${intensity+25}, ${intensity})`;
+                ranks.innerHTML += `<div class="ranker" style="background:${backgroundColor}">#${ranker.number} ${ranker.name} ${ranker.wins}</div>`;
+            });
+}
+/*
+* Function to handel Get Ranks 
+*/
 function showRanks() {
-	const secondItem = document.body.children[1];
-    const newItem = document.createElement('div');
+	const secondItem = document.body.children[1];//get the first node
+    const newItem = document.createElement('div');//create new div
     newItem.id = 'ranks'; 
-    document.body.insertBefore(newItem, secondItem);
+    document.body.insertBefore(newItem, secondItem);//and Insert them on top not bottom of Body tag
     let ranks = document.getElementById('ranks');
     ranks.innerHTML = 'Ranking List:';
 
@@ -114,12 +139,7 @@ function showRanks() {
     }).then(response => response.json())
     .then(data => {
         if (data.success) {
-			  const total = data.data.length;
-            data.data.forEach((ranker, index) => {
-    		let intensity = Math.round(200 * (index / (total)));
-    		backgroundColor = `rgb(219, ${intensity+25}, ${intensity})`;
-                ranks.innerHTML += `<div class="ranker" style="background:${backgroundColor}">#${ranker.number} ${ranker.name} ${ranker.wins}</div>`;
-            });
+			updateRanks(data);//Show rankers in element
         }  else {
             console.error('Failed to load ranking data');
         }
