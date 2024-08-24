@@ -135,7 +135,7 @@ function updateRequestPanel(data) {
             }
         });
     }
-    requestsElement.innerHTML += `Requests: ${requestCount}`;
+    requestsElement.innerHTML += `{{ 'Requests' | trans }}: ${requestCount}`;
 }
 /*
 * Function to update the accepted requests UI
@@ -143,7 +143,7 @@ function updateRequestPanel(data) {
 function updateAcceptedRequestsUI(data) {
     const headerElement = document.getElementById("header");
     const gamesElement = document.getElementById("games");
-    const headerItem = '<div id="games" class="menu" title="Game list">Games</div>';
+    const headerItem = `<div id="games" class="menu" title="{{ 'Game list' | trans }}">{{ 'Game' | trans }}</div>`;
 
     if (data.length > 0) {
         if (!gamesElement) {
@@ -189,7 +189,7 @@ function addGameElement(opponent) {
         gamesElement.innerHTML += `
             <li style="display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: space-around;">
                 <div class="item">${opponent}</div>
-                <div class="item" onclick="playGame('${opponent}', false)">Play 🎮</div>
+                <div class="item" onclick="playGame('${opponent}', false)">{{'Play'|trans}} 🎮</div>
             </li>`;
     }
 }
