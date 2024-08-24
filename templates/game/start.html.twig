@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block header %}
 	<div class="mb-3">
-		<div id="ranking" title="Global Ranking">
+		<div id="ranking" title="Global Ranking" onclick="showRanks()">
 			Ranking
 		</div>
 		<div id="mode" class="menu menu-icon" title="cooming soon">
@@ -15,43 +15,115 @@
 {% endblock %}
 {% block script %}
 	<script>
-document.addEventListener('DOMContentLoaded', () => {
-        setInterval(() => {
-            window.location.reload();
-        }, 3500); // Correctly set up to call handelRequest every 5 seconds
-    });
-function makeMove(position, gameId, element) {
-    if (!element.classList.contains('disabled')) {
-        handelRequest(gameId, position);
-    }
-}
+	let gameId = {{gameId}} , playerRole = '{{playerRole}}';
 
-function handelRequest(gameid, position = null) {
-    fetch(`/move/${gameid}`, {
+let checkInterval;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Set and store the interval ID
+    checkInterval = setInterval(() => {
+        handleWinner(gameId);
+    }, 5000);
+});
+
+function handleWinner(gameId) {
+    fetch(`/check-winner/${gameId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'  // Important for Symfony to recognize it as an AJAX request
-        },
-        body: JSON.stringify({
-            position: position
-        })
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update each cell of the board
-                data.board.forEach((value, index) => {
-                    let cell = document.getElementById(`position_${index}`);
-                    if (cell) {
-                        cell.textContent = value; // Assuming each cell has a text content area
-                    }
-                });
-            } else {
-                // alert('Move could not be made: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error making move:', error));
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayWinner(data.message);
+            clearInterval(checkInterval); // Stop checking for a winner
+			if(playerRole !== data.winner){
+				window.location.href = 'http://127.0.0.1:8000/home';
+			}
+        } else {
+            console.log("No winner yet, reloading page.");
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);  // Reload the page after 5 seconds if no winner
+        }
+    })
+    .catch(error => {
+        console.error('Error determining winner:', error);
+        setTimeout(() => {
+            window.location.reload();
+        }, 5000);  // Attempt to reload on error
+    });
+}
+function makeMove(position, gameId, element) {
+    if (!element.classList.contains('disabled')) {
+        element.classList.add('disabled'); // Prevent further clicks on this cell
+        handleMoves(gameId, position);
+    }
+}
+
+function displayWinner(message) {
+    const winnerMessage = document.getElementById('winnerMessage');
+    winnerMessage.textContent = message;
+    winnerMessage.style.display = 'block';
+}
+
+function handleMoves(gameId, position = null) {
+    fetch(`/move/${gameId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ position: position })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateBoard(data.board);
+        } else {
+            console.log('Move could not be made:', data.message);
+        }
+    })
+    .catch(error => console.error('Error making move:', error));
+}
+
+function updateBoard(board) {
+    board.forEach((value, index) => {
+        let cell = document.getElementById(`label_${index}`);
+        if (cell) {
+            cell.textContent = value; // Update cell content
+        }
+    });
+}
+
+function showRanks() {
+	const secondItem = document.body.children[1];
+    const newItem = document.createElement('div');
+    newItem.id = 'ranks'; 
+    document.body.insertBefore(newItem, secondItem);
+    let ranks = document.getElementById('ranks');
+    ranks.innerHTML = 'Ranking List:';
+
+    fetch(`/ranking`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(response => response.json())
+    .then(data => {
+        if (data.success) {
+			  const total = data.data.length;
+            data.data.forEach((ranker, index) => {
+    		let intensity = Math.round(200 * (index / (total)));
+    		backgroundColor = `rgb(219, ${intensity+25}, ${intensity})`;
+                ranks.innerHTML += `<div class="ranker" style="background:${backgroundColor}">#${ranker.number} ${ranker.name} ${ranker.wins}</div>`;
+            });
+        }  else {
+            console.error('Failed to load ranking data');
+        }
+    }).catch(error => console.error('Error receiving request:', error));
 }
 	</script>
 {% endblock %}
@@ -64,6 +136,7 @@ function handelRequest(gameid, position = null) {
 			{% else %}
 				Active
 			{% endif %}!</p>
+		<div id="winnerMessage" style="display: none;"></div>
 		<form id="form" action="{{ path('make_move',{ gameId: game.id }) }}" method="post">
 			<table>
 				{% for row in 0..2 %}
@@ -75,7 +148,7 @@ function handelRequest(gameid, position = null) {
 									<label class="gamebtn">{{ board[position] }}</label>
 								{% else %}
 									<input type="button" id="position_{{ position }}" name="position" value="{{ position }}" hidden>
-									<label for="position_{{ position }}" class="gamebtn {% if currentTurn != playerRole %}disabled{% endif %}" onclick="makeMove({{ position }},{{game.id}},this);"></label>
+									<label for="position_{{ position }}" id="label_{{ position }}" class="gamebtn {% if currentTurn != playerRole %}disabled{% endif %}" onclick="makeMove({{ position }},{{game.id}},this);"></label>
 								{% endif %}
 							</td>
 						{% endfor %}
@@ -90,3 +163,4 @@ function handelRequest(gameid, position = null) {
 		{% endif %}
 	{% endif %}
 {% endblock %}
+

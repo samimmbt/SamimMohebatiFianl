@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block header %}
 	<div class="mb-3" id="header">
-		<div id="ranking" title="Global Ranking">
+		<div id="ranking" title="Global Ranking" onclick="showRanks()">
 			Ranking
 		</div>
 		<div id="requests" class="menu menu-icon" title="requests">
@@ -183,6 +183,34 @@ function addGameElement(opponent) {
                 <div class="item" onclick="playGame('${opponent}', false)">Play 🎮</div>
             </li>`;
     }
+}
+
+function showRanks() {
+	const secondItem = document.body.children[1];
+    const newItem = document.createElement('div');
+    newItem.id = 'ranks'; 
+    document.body.insertBefore(newItem, secondItem);
+    let ranks = document.getElementById('ranks');
+    ranks.innerHTML = 'Ranking List:';
+
+    fetch(`/ranking`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(response => response.json())
+    .then(data => {
+        if (data.success) {
+			  const total = data.data.length;
+            data.data.forEach((ranker, index) => {
+    		let intensity = Math.round(200 * (index / (total)));
+    		backgroundColor = `rgb(219, ${intensity+25}, ${intensity})`;
+                ranks.innerHTML += `<div class="ranker" style="background:${backgroundColor}">#${ranker.number} ${ranker.name} ${ranker.wins}</div>`;
+            });
+        }  else {
+            console.error('Failed to load ranking data');
+        }
+    }).catch(error => console.error('Error receiving request:', error));
 }
 	</script>
 {% endblock script %}
