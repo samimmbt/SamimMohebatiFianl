@@ -24,7 +24,7 @@ class GameRepository extends ServiceEntityRepository
             ->setParameter('player1', $player1)
             ->setParameter('player2', $player2)
             ->andWhere('g.status = :status')
-            ->setParameter('status', 'in_progress') // Assuming you want games that are still in progress
+            ->setParameter('status', 'in_progress') 
             ->getQuery()
             ->getOneOrNullResult();
     }
