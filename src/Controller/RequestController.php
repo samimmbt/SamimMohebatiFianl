@@ -108,7 +108,7 @@ public function getAcceptedRequests(Request $request): JsonResponse
     {
         $user = $this->entityManager->getRepository(User::class)->findOneBySomeField($this->getUser()->getUserIdentifier());
         $user->declineRequest($opponent);
-        // $user->removeRequest($opponent);
+        $user->removeRequest($opponent);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
