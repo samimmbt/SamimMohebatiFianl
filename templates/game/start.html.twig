@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set and store the interval ID
     checkInterval = setInterval(() => {
         handleWinner(gameId);
-    }, 3000);
+    }, 5000);
 });
 /*
 * Function for knowing who is winner
@@ -48,7 +48,7 @@ function handleWinner(gameId) {
             console.log("No winner yet, reloading page.");
             setTimeout(() => {
                 window.location.reload();
-            }, 3000);  // Reload the page after 5 seconds if no winner
+            }, 5000);  // Reload the page after 5 seconds if no winner
         }
     })
     .catch(error => {
@@ -79,7 +79,7 @@ function displayWinner(message) {
 * Function for handeling the Moves
 */
 function handleMoves(gameId, position = null) {
-    fetch(`/move/${gameId}`, {
+    fetch(`/en/move/${gameId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
