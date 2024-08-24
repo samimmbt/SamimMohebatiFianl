@@ -90,7 +90,7 @@ function gamelist(request, list) { // does two work first its a request it sends
     const { opponent, accept, reciver } = list;
     const headerElement = document.getElementById("header");
     const gamesElement = document.getElementById("games");
-    const headerItem = '<div id="games" class="menu" title="Game list">Games</div>';
+    const headerItem = `<div id="games" class="menu" title="{{ 'Game list' | trans }}">{{ 'Game' | trans }}</div>`;
     console.log("list: " + list.receiver);
     if (request) {
         fetch(`/game/${request}`).then(response => response.json()).then(data => {
@@ -237,17 +237,17 @@ function showRanks() {
 	<h1>Tic Tac Toe</h1>
 	{{ form_start(form) }}
 	{{ form_widget(form) }}
-	<button type="submit" id="play">Search</button>
+	<button type="submit" id="play">{{'Search'|trans}}</button>
 	{{ form_end(form) }}
 	{% set data = app.request.get('users') %}
 	{% if data is not empty%}
 		<div>
-			<h3>Search Results:</h3>
+			<h3>{{'Search Results'|trans}}:</h3>
 			<ul class="menu2">
 				{% for user in data %}
 					<li class="listitem">
 						{{ user.username }}
-						<button id="play" class="small" name="play" onclick="sendPlayingRequest('{{user.username}}')">Play</button>
+						<button id="play" class="small" name="play" onclick="sendPlayingRequest('{{user.username}}')">{{'Play'|trans}}</button>
 					</li>
 				{% endfor %}
 

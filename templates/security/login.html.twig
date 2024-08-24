@@ -12,13 +12,13 @@
 		{% endblock %}
 		{% if app.user %}
 			<div class="mb-3">
-				You are logged in as
+				{{'You are logged in as'|trans}}
 				{{ app.user.userIdentifier }},
-				<a href="{{ path('app_logout') }}">Logout</a>
+				<a href="{{ path('app_logout') }}">{{'Logout'|trans}}</a>
 			</div>
 		{% endif %}
 
-		<h1 class="h3 font-weight-normal">Please sign in</h1>
+		<h1 class="h3 font-weight-normal">{{'Please sign in'|trans}}</h1>
 		<label for="inputUsername">{{'Username'|trans}}</label>
 		<input type="text" name="username" id="inputUsername" class="form-control" autocomplete="username" required autofocus>
 		<label for="inputPassword">{{'Password'|trans}}</label>
@@ -37,7 +37,7 @@
 			{{'Sign in'|trans}}
 		</button>
 	</form>
-	<div>New to X/O?
+	<div>{{'New to X/O'|trans}}?
 		<a href="{{path('app_register')}}">{{'Create an account'|trans}}</a>
 	</div>
 {% endblock %}
