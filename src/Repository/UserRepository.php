@@ -55,9 +55,6 @@ class UserRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
         ;
     }
-
-    // src/Repository/UserRepository.php
-
     public function findAcceptedRequestsForUser(User $user): array
     {
         $qb = $this->createQueryBuilder('u');
