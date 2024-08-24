@@ -24,13 +24,13 @@ class RegistrationController extends AbstractController
         $this->entityManager = $entityManager;
     }
 
-    #[Route('/', name: 'index')]
+    #[Route('/{_locale}', name: 'index', requirements: ['_locale' => 'en|fa'], defaults: ['_locale' => 'en'])]
     public function index(): Response
     {
         return $this->render('index.html.twig');
     }
 
-    #[Route('/signup', name: 'app_register')]
+    #[Route('/{_locale}/signup', name: 'app_register', requirements: ['_locale' => 'en|fa'], defaults: ['_locale' => 'en'])]
     public function register(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordEncoder, AuthenticationUtils $auth): Response
     {
         $error = $auth->getLastAuthenticationError();

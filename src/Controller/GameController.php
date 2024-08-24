@@ -27,7 +27,7 @@ class GameController extends AbstractController
         $this->eventDispatcher = $eventDispatcher;
     }
 
-    #[Route('/home', name: 'home')]
+    #[Route('/{_locale}/home', name: 'home', requirements: ['_locale' => 'en|fa'], defaults: ['_locale' => 'en'])]
     public function home(Request $request, LoggerInterface $logger): Response
     {
         $form = $this->createForm(UserSearchType::class, null, ['attr' => ['id' => 'form']]);
@@ -57,7 +57,7 @@ class GameController extends AbstractController
     }
 
 
-    #[Route('/Tic/Tac/Toe', name: 'game_page')]
+    #[Route('/{_locale}/Tic/Tac/Toe', name: 'game_page', requirements: ['_locale' => 'en|fa'], defaults: ['_locale' => 'en'])]
     public function launchGame(Request $request, LoggerInterface $logger): Response
     {
         $opponentUsername = $request->query->get('opponent');
@@ -114,7 +114,7 @@ class GameController extends AbstractController
     // _______________________________________________________________________________________________________________
     //move logic ----------------------------------------------------------------------------------------------
 
-    #[Route('/move/{gameId}', name: 'make_move', methods: ['POST'])]
+    #[Route('/{_locale}/move/{gameId}', name: 'make_move', methods: ['POST'], requirements: ['_locale' => 'en|fa'], defaults: ['_locale' => 'en'])]
     public function makeMove(Request $request, $gameId, LoggerInterface $logger): Response
     {
         $game = $this->entityManager->getRepository(Game::class)->find($gameId);
