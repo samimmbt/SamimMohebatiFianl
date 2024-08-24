@@ -30,6 +30,14 @@ class UserRepository extends ServiceEntityRepository
     //            ->getResult()
     //        ;
     //    }
+    public function findTopUsersByWins(int $limit = 10): array
+    {
+        return $this->createQueryBuilder('u')
+            ->orderBy('u.wins', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
     public function searchUsers(string $term): array
     {
         return $this->createQueryBuilder('u')
