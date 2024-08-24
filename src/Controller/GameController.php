@@ -19,7 +19,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class GameController extends AbstractController
 {
-    public array $board; // Declare the board as a public property
+    public array $board;
     private $entityManager;
     private EventDispatcherInterface $eventDispatcher;
 
@@ -41,13 +41,13 @@ class GameController extends AbstractController
             $users = $this->entityManager->getRepository(User::class)->searchUsers($data['username']);
             $logger->info("Form submitted:", [ // Log the search results
                 'form' => $data,
-                'users' => $users, // Log all users found
+                'users' => $users, 
             ]);
             $userArray = [];
             foreach ($users as $user) {
                 $userArray[] = [
-                    'id' => $user->getId(),          // Get user ID
-                    'username' => $user->getUsername() // Get username
+                    'id' => $user->getId(),          
+                    'username' => $user->getUsername() 
                 ];
                 $logger->info('User found: ' . $user->getUsername() . "data:" . $data['username'], ['Data' => $userArray]);
             }
@@ -106,7 +106,6 @@ class GameController extends AbstractController
         }
         $playerRole = ($game->getPlayer1() === $currentUser) ? 'player1' : 'player2';
         $playerMark = ($game->getPlayer1() === $currentUser) ? 'X' : 'O';
-        // Render the game view with the necessary game details
         return $this->render("game/start.html.twig", [
             'playerRole' => $playerRole,
             'playerMark' => $playerMark,
@@ -129,7 +128,7 @@ class GameController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         $position = $data['position'];
-        $user = $this->getUser(); // Assuming the user is authenticated
+        $user = $this->getUser(); 
         $playerMark = $game->getCurrentTurn() === 'player1' ? 'X' : 'O';
 
         if (($game->getCurrentTurn() === 'player1' && $game->getPlayer1() === $user ||
