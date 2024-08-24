@@ -1,3 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+*{
+    font-family: "Orbitron", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+}
 body {
     /* margin-top: -11vh; */
     background-color: rgb(233, 238, 239);
@@ -79,7 +86,7 @@ label.gamebtn {
     background-color: #f4efe8;
 }
 
-.alert-danger {
+.alert-danger, #winnerMessage {
     font-size: larger;
     color: tomato;
     padding: 3vw;
@@ -168,4 +175,29 @@ label.gamebtn {
     filter: opacity(0.5);
     pointer-events: none;
     cursor: not-allowed;
+}
+
+#ranks{
+    background: floralwhite;
+    padding: 2%;
+    overflow: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none; 
+        margin-top: 0;
+    border-radius: 15px;
+    position: absolute;
+    top: 10vh;
+    left: 10vw;
+}
+
+.ranker{
+    padding: 4%;
+    width: 19vw;
+    height: 4vh;
+    margin: 1vw;
+    align-content: center;
+    color: antiquewhite;
+}
+#ranks::-webkit-scrollbar{
+    display: none;
 }
